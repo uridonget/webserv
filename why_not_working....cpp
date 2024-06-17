@@ -28,6 +28,7 @@ int init_server(int server_fd)
     int opt = 1;
     struct sockaddr_in address;
 
+    set_nonblocking(server_fd);
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
     {
         perror("setsockopt");
@@ -47,7 +48,6 @@ int init_server(int server_fd)
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    set_nonblocking(server_fd);
     int kq = kqueue();
     if (kq == -1)
     {
@@ -57,10 +57,32 @@ int init_server(int server_fd)
     return kq;
 }
 
+int find_str(std::vector<char> str1) // kmp algorithm
+{
+    std::string str2 = "\r\n\r\n";
+	int dp[1000001] = { 0, };
+	int size1 = str1.size();
+	int size2 = str2.size();
+	int j = 0;
+	for (int i = 1; i < size2; i++){
+		while (j > 0 && str2[i] != str2[j]) j = dp[j - 1];
+		if (str2[i] == str2[j]) dp[i] = ++j;
+	}
+	j = 0;
+	for (int i = 0; i < size1; i++) {
+		while (j > 0 && str1[i] != str2[j]) j = dp[j - 1];
+		if (str1[i] == str2[j]) j++;
+		if (j == size2) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 int main()
 {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    std::map<int, std::string> client;
+    std::map<int, std::vector<char> > client;
     std::vector<struct kevent> change_list;
 
     if (server_fd == -1)
@@ -87,9 +109,10 @@ int main()
             exit(EXIT_FAILURE);
         }
         change_list.clear();
+        std::cout << "num of event : " << nevents << std::endl;
         for (int i = 0; i < nevents; ++i)
         {
-            if (events[i].flags & EV_ERROR)
+            if (events[i].flags == EV_ERROR)
             {
                 if (events[i].ident == server_fd)
                 {
@@ -115,38 +138,40 @@ int main()
                         continue;
                     }
                     set_nonblocking(client_fd);
-                    struct kevent client_event1;
-                    struct kevent client_event2;
-                    EV_SET(&client_event1, client_fd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-                    EV_SET(&client_event2, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-                    change_list.push_back(client_event1);
-                    change_list.push_back(client_event2);
-                    std::string buf = "";
+                    struct kevent client_event;
+                    EV_SET(&client_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+                    change_list.push_back(client_event);
+                    std::vector<char> buf;
                     client[client_fd] = buf;
                 }
                 else
                 {
                     int client_fd = events[i].ident;
-                    std::map<int, std::string>::iterator it = client.find(client_fd);
+                    std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
                     char buf[100];
-                    int n = read(events[i].ident, buf, sizeof(buf));
-                    it->second += buf;
-                    if (n < sizeof(buf))
+                    int n = read(events[i].ident, buf, 100);
+                    for (int i = 0; i < n; i++)
                     {
-                            struct kevent client_event;
-                            EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-                            change_list.push_back(client_event);
+                        it->second.push_back(buf[i]);
+                    }
+                    if (find_str(it->second)) // header done (this will be different check method in later...)
+                    {
+                        struct kevent client_event;
+                        EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+                        change_list.push_back(client_event);
                     }
                 }
             }
             else if (events[i].filter == EVFILT_WRITE)
             {
                 int client_fd = events[i].ident;
-                std::map<int, std::string>::iterator it = client.find(client_fd);
-                std::cout << it->second << std::endl;
+                std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
+                for (int i = 0; i < it->second.size(); i++)
+                    std::cout << it->second[i];
                 write(client_fd, RESPONSE, strlen(RESPONSE));
+                it->second.clear();
                 struct kevent client_event;
-                EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+                EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
                 change_list.push_back(client_event);
             }
         }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,5 +8,51 @@
 <body>
     <h1>Welcome to Webserv Test Page</h1>
     <p>This is a simple HTML file to test the web server.</p>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv Test</title>
+    <style>
+        .board-display {
+            margin-top: 20px;
+        }
+        .post {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Webserv Test Page</h1>
+    <p>This is a simple HTML file to test the web server.</p>
+    
+    <h2>게시판</h2>
+    <form id="post-form">
+        <input type="text" id="post-content" placeholder="내용을 입력하세요" required>
+        <button type="submit">등록</button>
+    </form>
+    
+    <div class="board-display" id="board-display">
+        <!-- 게시판 글들이 여기에 표시됩니다 -->
+    </div>
+
+    <script>
+        document.getElementById('post-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const content = document.getElementById('post-content').value;
+            if (content.trim() !== '') {
+                const postElement = document.createElement('div');
+                postElement.classList.add('post');
+                postElement.textContent = content;
+                document.getElementById('board-display').appendChild(postElement);
+                document.getElementById('post-content').value = '';
+            }
+        });
+    </script>
 </body>
 </html>

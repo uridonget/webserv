@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/19 16:07:58 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/19 17:55:57 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,14 @@ void webserv::init_server() {
     }
     
     set_nonblock(server_fd);
-    
+
+    int opt = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
     struct sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
@@ -123,6 +130,37 @@ std::string webserv::make_response() {
     return (response);
 }
 
+void webserv::read_event(int idx) {
+    std::cout << "****** read event ******" << std::endl;
+    int client_fd = events[idx].ident;
+    std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
+    char buf[BUFFER_SIZE] = {0};
+    int n = read(client_fd, buf, BUFFER_SIZE);
+    for (int i=0; i < n; i++) {
+        it->second.push_back(buf[i]);
+    }
+    std::cout << "n : " << n << std::endl;
+    if (n != BUFFER_SIZE) {
+        std::cout << "****** read end ******" << std::endl;
+        struct kevent client_event;
+        EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+        changeList.push_back(client_event);
+    }
+}
+
+void webserv::write_event(int idx) {
+    std::cout << "****** write event ******" << std::endl;
+    int client_fd = events[idx].ident;
+    std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
+    for (int i=0; i < it->second.size(); i++) {
+        std::cout << it->second[i];
+    }
+    std::string response = make_response();
+    write(client_fd, response.c_str(), response.length());
+    close(client_fd);
+    client.erase(client_fd);
+}
+
 void webserv::run_server() {
     struct timespec timeout;
     timeout.tv_sec = 5;
@@ -144,33 +182,9 @@ void webserv::run_server() {
             if (events[i].ident == server_fd) {
                 new_client(); // new client
             } else if (events[i].filter == EVFILT_READ) {
-                std::cout << "****** read event ******" << std::endl;
-                int client_fd = events[i].ident;
-                std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
-                char buf[BUFFER_SIZE] = {0};
-                int n = read(client_fd, buf, BUFFER_SIZE);
-                for (int i=0; i < n; i++) {
-                    it->second.push_back(buf[i]);
-                }
-                if (n != BUFFER_SIZE) {
-                    std::cout << "****** read end ******" << std::endl;
-                    struct kevent client_event;
-                    EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-                    changeList.push_back(client_event);
-                }
+                read_event(i);
             } else if (events[i].filter == EVFILT_WRITE) {
-                std::cout << "****** write event ******" << std::endl;
-                int client_fd = events[i].ident;
-                std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
-                for (int i=0; i < it->second.size(); i++) {
-                    std::cout << it->second[i];
-                }
-                std::string response = make_response();
-                write(client_fd, response.c_str(), response.length());
-                it->second.clear();
-                struct kevent client_event;
-                EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-                changeList.push_back(client_event);
+                write_event(i);
             }
         }
     }

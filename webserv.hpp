@@ -36,6 +36,8 @@ class webserv {
 		bool check_socket_error(int idx);
 		void new_client();
 		std::string make_response();
+		void read_event(int idx);
+		void write_event(int idx);
 		void run_server(void);
 };
 

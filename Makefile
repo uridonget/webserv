@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jeonghaechan <jeonghaechan@student.42.f    +#+  +:+       +#+         #
+#    By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/04/12 10:20:27 by haejeong          #+#    #+#              #
-#    Updated: 2024/06/17 11:45:52 by jeonghaecha      ###   ########.fr        #
+#    Updated: 2024/06/19 14:10:48 by haejeong         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME	 = a.out
 
 CXX		 = c++
 
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+CXXFLAGS = # -Wall -Wextra -Werror -std=c++98
 
 SRCS	 = $(wildcard *.cpp)
 

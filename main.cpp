@@ -1,25 +1,108 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <cstring>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
+/*   Updated: 2024/06/19 16:07:58 by haejeong         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#define PORT 8080
+#include "webserv.hpp"
 
-void handleClient(int client_socket) {
-    const int buffer_size = 1024;
-    char buffer[buffer_size] = {0};
-    read(client_socket, buffer, buffer_size);
+webserv::webserv() {
+    std::cout << "webserv constructor called" << std::endl;
+}
 
-    std::cout << "Received request:\n" << buffer << std::endl;
+webserv::~webserv() {
+    std::cout << "webserv destructor called" << std::endl;
+}
 
+void webserv::set_nonblock(int fd) {
+    if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+        perror("fcntl(F_SETFL)");
+        std::exit(EXIT_FAILURE);
+    }
+}
+
+void webserv::init_server() {
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd < 0) {
+        perror("socket");
+        std::exit(EXIT_FAILURE);
+    }
+    
+    set_nonblock(server_fd);
+    
+    struct sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+    
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind");
+        std::exit(EXIT_FAILURE);
+    }
+    
+    if (listen(server_fd, 10) < 0) {
+        perror("listen");
+        std::exit(EXIT_FAILURE);
+    }
+}
+
+void webserv::init_kqueue() {
+    kq = kqueue();
+    if (kq < 0) {
+        perror("kqueue");
+        std::exit(EXIT_FAILURE);
+    }
+    struct kevent check;
+    EV_SET(&check, server_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    if (kevent(kq, &check, 1, NULL, 0, NULL) < 0) {
+        perror("kevent");
+        std::exit(EXIT_FAILURE);
+    }
+}
+
+bool webserv::check_socket_error(int idx) {
+    if (events[idx].flags == EV_ERROR) {
+        if (events[idx].ident == server_fd) {
+            perror("Server socket error");
+            std::exit(EXIT_FAILURE);
+        } else {
+            perror("Client socket error");
+            close(events[idx].ident);
+            client.erase(events[idx].ident);
+            return true;
+        }
+    }
+    return false;
+}
+
+void webserv::new_client() {
+    std::cout << "****** new client ******" << std::endl;
+    int client_fd = accept(server_fd, NULL, NULL);
+    if (client_fd < 0) {
+        perror("accept");
+    } else {
+        set_nonblock(client_fd);
+        struct kevent client_event;
+        EV_SET(&client_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+        changeList.push_back(client_event);
+        if (kevent(kq, &client_event, 1, NULL, 0, NULL) < 0) {
+            perror("kevent");
+            close(client_fd);
+        }
+        client[client_fd] = std::vector<char>();
+    }
+}
+
+std::string webserv::make_response() {
     std::string response;
     std::string content;
 
-    // 파일 읽기
     std::ifstream file("index.html", std::ios::in | std::ios::binary);
     if (file) {
         std::ostringstream file_buffer;
@@ -37,60 +120,68 @@ void handleClient(int client_socket) {
         response += "Content-Type: text/html\r\n\r\n";
         response += content;
     }
+    return (response);
+}
 
-    send(client_socket, response.c_str(), response.length(), 0);
-    close(client_socket);
+void webserv::run_server() {
+    struct timespec timeout;
+    timeout.tv_sec = 5;
+    timeout.tv_nsec = 0;
+    while (true) {
+        int nev = kevent(kq, &changeList[0], changeList.size(), events, 10, &timeout);
+        if (nev < 0) {
+            perror("kevent");
+            std::exit(EXIT_FAILURE);
+        }
+        else if (nev == 0) {
+            continue ;
+        }
+        changeList.clear();
+        std::cout << "NUMBER OF EVENT : " << nev << std::endl;
+        for (int i=0; i < nev; i++) {
+            if (check_socket_error(i))
+                continue ; // error check
+            if (events[i].ident == server_fd) {
+                new_client(); // new client
+            } else if (events[i].filter == EVFILT_READ) {
+                std::cout << "****** read event ******" << std::endl;
+                int client_fd = events[i].ident;
+                std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
+                char buf[BUFFER_SIZE] = {0};
+                int n = read(client_fd, buf, BUFFER_SIZE);
+                for (int i=0; i < n; i++) {
+                    it->second.push_back(buf[i]);
+                }
+                if (n != BUFFER_SIZE) {
+                    std::cout << "****** read end ******" << std::endl;
+                    struct kevent client_event;
+                    EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+                    changeList.push_back(client_event);
+                }
+            } else if (events[i].filter == EVFILT_WRITE) {
+                std::cout << "****** write event ******" << std::endl;
+                int client_fd = events[i].ident;
+                std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
+                for (int i=0; i < it->second.size(); i++) {
+                    std::cout << it->second[i];
+                }
+                std::string response = make_response();
+                write(client_fd, response.c_str(), response.length());
+                it->second.clear();
+                struct kevent client_event;
+                EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+                changeList.push_back(client_event);
+            }
+        }
+    }
+    close(server_fd);
 }
 
 int main() {
-    int server_fd, client_socket;
-    struct sockaddr_in address;
-    int opt = 1;
-    int addrlen = sizeof(address);
 
-    // 소켓 생성
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
+    webserv server;
 
-    // 소켓 옵션 설정: SO_REUSEADDR
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-        perror("setsockopt");
-        close(server_fd);
-        exit(EXIT_FAILURE);
-    }
-
-    // 주소와 포트 설정
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY; // 모든 인터페이스에서 수신 대기
-    address.sin_port = htons(PORT);
-
-    // 소켓을 주소에 바인딩
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("bind failed");
-        close(server_fd);
-        exit(EXIT_FAILURE);
-    }
-
-    // 연결 요청 대기
-    if (listen(server_fd, 3) < 0) {
-        perror("listen");
-        close(server_fd);
-        exit(EXIT_FAILURE);
-    }
-
-    std::cout << "HTTP server is running on port " << PORT << std::endl;
-
-    while (true) {
-        if ((client_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
-            perror("accept");
-            close(server_fd);
-            exit(EXIT_FAILURE);
-        }
-        handleClient(client_socket);
-    }
-
-    close(server_fd);
-    return 0;
+    server.init_server();
+    server.init_kqueue();
+    server.run_server();
 }

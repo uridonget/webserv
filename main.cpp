@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/19 17:55:57 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/19 18:10:43 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,12 +136,15 @@ void webserv::read_event(int idx) {
     std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
     char buf[BUFFER_SIZE] = {0};
     int n = read(client_fd, buf, BUFFER_SIZE);
-    for (int i=0; i < n; i++) {
-        it->second.push_back(buf[i]);
-    }
-    std::cout << "n : " << n << std::endl;
+    // for (int i=0; i < n; i++) {
+    //     it->second.push_back(buf[i]);
+    // }
+    it->second.insert(it->second.end(), buf, buf + n);
     if (n != BUFFER_SIZE) {
-        std::cout << "****** read end ******" << std::endl;
+        std::cout << "++++++++++++++++++++++++" << std::endl;
+        std::cout << "+++++++ read end +++++++" << std::endl;
+        std::cout << "++++++++++++++++++++++++" << std::endl;
+        std::cout << std::endl;
         struct kevent client_event;
         EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
         changeList.push_back(client_event);
@@ -152,10 +155,13 @@ void webserv::write_event(int idx) {
     std::cout << "****** write event ******" << std::endl;
     int client_fd = events[idx].ident;
     std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
+    std::cout << "HTTP REQUEST" << std::endl;
     for (int i=0; i < it->second.size(); i++) {
         std::cout << it->second[i];
     }
     std::string response = make_response();
+    // std::cout << "HTTP RESPONSE" << std::endl;
+    // std::cout << response;
     write(client_fd, response.c_str(), response.length());
     close(client_fd);
     client.erase(client_fd);
@@ -192,7 +198,6 @@ void webserv::run_server() {
 }
 
 int main() {
-
     webserv server;
 
     server.init_server();

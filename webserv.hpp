@@ -16,7 +16,7 @@
 #include <sstream>
 
 #define PORT 8080
-#define BUFFER_SIZE 50
+#define BUFFER_SIZE 1024
 
 class webserv {
 	private:
@@ -35,10 +35,13 @@ class webserv {
 		void handle_event(int nevents);
 		bool check_socket_error(int idx);
 		void new_client();
-		std::string make_response();
+		std::string make_response(std::vector<char*> envp);
 		void read_event(int idx);
 		void write_event(int idx);
 		void run_server(void);
+
+		std::map<std::string, std::string> parseRequest(const std::string & request);
+		std::vector<char*> createEnvp(const std::map<std::string, std::string> &env_vars);
 };
 
 #endif

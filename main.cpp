@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/19 18:10:43 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/20 13:16:21 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,9 @@ bool webserv::check_socket_error(int idx) {
 }
 
 void webserv::new_client() {
-    std::cout << "****** new client ******" << std::endl;
+    std::cout << "++++++++++++++++++++++++" << std::endl;
+    std::cout << "++++++ new client ++++++" << std::endl;
+    std::cout << "++++++++++++++++++++++++" << std::endl;
     int client_fd = accept(server_fd, NULL, NULL);
     if (client_fd < 0) {
         perror("accept");
@@ -106,7 +108,7 @@ void webserv::new_client() {
     }
 }
 
-std::string webserv::make_response() {
+std::string webserv::make_response(std::vector<char*> envp) {
     std::string response;
     std::string content;
 
@@ -115,7 +117,7 @@ std::string webserv::make_response() {
         std::ostringstream file_buffer;
         file_buffer << file.rdbuf();
         content = file_buffer.str();
-
+        
         response = "HTTP/1.1 200 OK\r\n";
         response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
         response += "Content-Type: text/html\r\n\r\n";
@@ -136,9 +138,6 @@ void webserv::read_event(int idx) {
     std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
     char buf[BUFFER_SIZE] = {0};
     int n = read(client_fd, buf, BUFFER_SIZE);
-    // for (int i=0; i < n; i++) {
-    //     it->second.push_back(buf[i]);
-    // }
     it->second.insert(it->second.end(), buf, buf + n);
     if (n != BUFFER_SIZE) {
         std::cout << "++++++++++++++++++++++++" << std::endl;
@@ -155,14 +154,16 @@ void webserv::write_event(int idx) {
     std::cout << "****** write event ******" << std::endl;
     int client_fd = events[idx].ident;
     std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
-    std::cout << "HTTP REQUEST" << std::endl;
-    for (int i=0; i < it->second.size(); i++) {
-        std::cout << it->second[i];
+    std::string request(it->second.begin(), it->second.end());
+    std::cout << "RECEIVED REQUEST\n" << request << std::endl;
+    std::map<std::string, std::string> env_vars = parseRequest(request);
+    std::vector<char*> envp = createEnvp(env_vars);
+    for (std::vector<char *>::iterator it = envp.begin(); it != envp.end(); it++) {
+        if (*it != NULL)
+            std::cout << *it << std::endl;
     }
-    std::string response = make_response();
-    // std::cout << "HTTP RESPONSE" << std::endl;
-    // std::cout << response;
-    write(client_fd, response.c_str(), response.length());
+    std::string response = make_response(envp); // cgi
+    send(client_fd, response.c_str(), response.length(), 0);
     close(client_fd);
     client.erase(client_fd);
 }

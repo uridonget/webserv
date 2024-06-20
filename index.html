@@ -1,58 +1,59 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webserv Test</title>
-</head>
-<body>
-    <h1>Welcome to Webserv Test Page</h1>
-    <p>This is a simple HTML file to test the web server.</p>
-</body>
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webserv Test</title>
+    <title>Button Click Counter</title>
     <style>
-        .board-display {
-            margin-top: 20px;
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
         }
-        .post {
-            border-bottom: 1px solid #ddd;
-            padding: 10px 0;
+        .container {
+            text-align: center;
+        }
+        .counter {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to Webserv Test Page</h1>
-    <p>This is a simple HTML file to test the web server.</p>
-    
-    <h2>게시판</h2>
-    <form id="post-form">
-        <input type="text" id="post-content" placeholder="내용을 입력하세요" required>
-        <button type="submit">등록</button>
-    </form>
-    
-    <div class="board-display" id="board-display">
-        <!-- 게시판 글들이 여기에 표시됩니다 -->
+    <div class="container">
+        <div class="counter" id="counter">0</div>
+        <button onclick="incrementCounter()">Click me!</button>
     </div>
 
     <script>
-        document.getElementById('post-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const content = document.getElementById('post-content').value;
-            if (content.trim() !== '') {
-                const postElement = document.createElement('div');
-                postElement.classList.add('post');
-                postElement.textContent = content;
-                document.getElementById('board-display').appendChild(postElement);
-                document.getElementById('post-content').value = '';
-            }
-        });
+        let count = 0;
+
+        function incrementCounter() {
+            count++;
+            document.getElementById('counter').textContent = count;
+            sendPostRequest(count);
+        }
+
+        function sendPostRequest(count) {
+            const data = { count: count };
+            console.log("Sending data:", JSON.stringify(data));  // 디버그용 로그
+            fetch('http://localhost:8080/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Success:', data))
+            .catch((error) => console.error('Error:', error));
+        }
     </script>
 </body>
 </html>

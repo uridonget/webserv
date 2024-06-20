@@ -11,14 +11,20 @@ input_data = form.getvalue('input_data')
 with open('index.html', 'r', encoding='utf-8') as file:
     html_file = file.read()
 
-# 입력 데이터를 HTML 템플릿에 삽입
-html_content = html_file.replace('{{input_data}}', input_data)
+# HTML 페이지 생성
+html_content = """
 
-# HTTP 헤더
-print("Content-Type: text/html; charset=utf-8")
-
-# 빈 줄을 출력하여 헤더와 본문을 구분합니다.
-print()
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World CGI</title>
+</head>
+<body>
+    <h1>Hello World!</h1>
+</body>
+</html>
+""".format(input_data)
 
 # HTML 페이지 출력
 print(html_content)

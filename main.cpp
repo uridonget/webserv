@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/20 13:16:21 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/20 16:05:30 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,28 +108,67 @@ void webserv::new_client() {
     }
 }
 
-std::string webserv::make_response(std::vector<char*> envp) {
-    std::string response;
-    std::string content;
+std::string webserv::make_response(const std::vector<char*> envp) {
+    // std::string response;
+    // std::string content;
 
-    std::ifstream file("index.html", std::ios::in | std::ios::binary);
-    if (file) {
-        std::ostringstream file_buffer;
-        file_buffer << file.rdbuf();
-        content = file_buffer.str();
+    // std::ifstream file("index.html", std::ios::in | std::ios::binary);
+    // if (file) {
+    //     std::ostringstream file_buffer;
+    //     file_buffer << file.rdbuf();
+    //     content = file_buffer.str();
         
-        response = "HTTP/1.1 200 OK\r\n";
-        response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
-        response += "Content-Type: text/html\r\n\r\n";
-        response += content;
-    } else {
-        content = "<h1>404 Not Found</h1>";
-        response = "HTTP/1.1 404 Not Found\r\n";
-        response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
-        response += "Content-Type: text/html\r\n\r\n";
-        response += content;
+    //     response = "HTTP/1.1 200 OK\r\n";
+    //     response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+    //     response += "Content-Type: text/html\r\n\r\n";
+    //     response += content;
+    // } else {
+    //     content = "<h1>404 Not Found</h1>";
+    //     response = "HTTP/1.1 404 Not Found\r\n";
+    //     response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+    //     response += "Content-Type: text/html\r\n\r\n";
+    //     response += content;
+    // }
+    // return (response);
+    int pipe_fd[2];
+    if (pipe(pipe_fd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
     }
-    return (response);
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {  // Child process
+        close(pipe_fd[0]);
+        dup2(pipe_fd[1], STDOUT_FILENO);
+        close(pipe_fd[1]);
+        std::string file_name = "./cgi_test.py"; 
+        std::vector<char *> exec_args;
+        exec_args.push_back(const_cast<char *>(file_name.c_str()));
+        exec_args.push_back(NULL);
+        execve(file_name.c_str(), exec_args.data(), const_cast<char *const *>(envp.data()));
+        perror("execve");
+        exit(EXIT_FAILURE);
+    } else {  // Parent process
+        close(pipe_fd[1]);
+        char buffer[1024];
+        std::string result;
+        std::string body;
+        ssize_t count;
+        while ((count = read(pipe_fd[0], buffer, sizeof(buffer))) > 0) {
+            body.append(buffer, count);
+        }
+        result = "HTTP/1.1 200 OK\r\n";
+        result += "Content-Length: " + std::to_string(body.length()) + "\r\n";
+        result += "Content-Type: text/html";
+        result += body.c_str();
+        close(pipe_fd[0]);
+        int status;
+        waitpid(pid, &status, 0);
+        return result;
+    }
 }
 
 void webserv::read_event(int idx) {
@@ -155,14 +194,11 @@ void webserv::write_event(int idx) {
     int client_fd = events[idx].ident;
     std::map<int, std::vector<char> >::iterator it = client.find(client_fd);
     std::string request(it->second.begin(), it->second.end());
-    std::cout << "RECEIVED REQUEST\n" << request << std::endl;
+    std::cout << "\nRECEIVED REQUEST\n" << request;
     std::map<std::string, std::string> env_vars = parseRequest(request);
     std::vector<char*> envp = createEnvp(env_vars);
-    for (std::vector<char *>::iterator it = envp.begin(); it != envp.end(); it++) {
-        if (*it != NULL)
-            std::cout << *it << std::endl;
-    }
     std::string response = make_response(envp); // cgi
+    std::cout << "RESPONSE\n" << response << std::endl;
     send(client_fd, response.c_str(), response.length(), 0);
     close(client_fd);
     client.erase(client_fd);

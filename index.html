@@ -2,58 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Button Click Counter</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            text-align: center;
-        }
-        .counter {
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1.2em;
-        }
-    </style>
+    <title>CGI Test</title>
 </head>
 <body>
-    <div class="container">
-        <div class="counter" id="counter">0</div>
-        <button onclick="incrementCounter()">Click me!</button>
-    </div>
-
-    <script>
-        let count = 0;
-
-        function incrementCounter() {
-            count++;
-            document.getElementById('counter').textContent = count;
-            sendPostRequest(count);
-        }
-
-        function sendPostRequest(count) {
-            const data = { count: count };
-            console.log("Sending data:", JSON.stringify(data));  // 디버그용 로그
-            fetch('http://localhost:8080/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => console.log('Success:', data))
-            .catch((error) => console.error('Error:', error));
-        }
-    </script>
+    <h1>Hello, World!</h1>
+    <p>Your input: {{input_data}}</p>
 </body>
 </html>

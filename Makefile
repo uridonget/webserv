@@ -6,7 +6,7 @@
 #    By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/04/12 10:20:27 by haejeong          #+#    #+#              #
-#    Updated: 2024/06/19 14:10:48 by haejeong         ###   ########.fr        #
+#    Updated: 2024/06/21 16:14:51 by haejeong         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,9 +16,9 @@ CXX		 = c++
 
 CXXFLAGS = # -Wall -Wextra -Werror -std=c++98
 
-SRCS	 = $(wildcard *.cpp)
+SRCS	 = $(wildcard src/*.cpp)
 
-INCS	 = $(wildcard *.hpp)
+INCS	 = $(wildcard include/*.hpp)
 
 OBJS	 = $(SRCS:.cpp=.o)
 

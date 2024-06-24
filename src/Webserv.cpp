@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/24 16:02:07 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/24 17:48:22 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,5 +31,6 @@ void Webserv::makeServerList(const std::string & configPath) {
     std::string fileInput = fileBuffer.str();
 	configParsing.removeComment(fileInput);
     configParsing.removeEmptyLine(fileInput);
-    configParsing.checkComment(fileInput);
+    configParsing.splitServer(fileInput);
+    configParsing.checkConfigs();
 }

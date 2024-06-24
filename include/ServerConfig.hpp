@@ -1,31 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server_config.hpp                                  :+:      :+:    :+:   */
+/*   ServerConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:23:48 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/21 16:34:24 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/24 14:41:36 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_CONFIG_HPP
 # define SERVER_CONFIG_HPP
 
-#include "includes.hpp"
+#include "Library.hpp"
 
 class ServerConfig {
 	private:
-		size_t							port;
-		in_addr_t						host;
-		std::string						serverName;
+		size_t							listen; // port
+		std::string						serverName; // localhost, 127.0.0.1
+		std::string 					root; // root path
 		unsigned long					clientMaxBodySize;
-		std::map<int, std::string>		errorPages;
-        struct sockaddr_in 				serverAddress;
-        int     						serverFd;  // socket(AF_INET, SOCK_STREAM, 0)
-		std::string						body;
+		std::string						index;
+		std::map<int, std::string>		errorPages; // <errorNum, path>
+		std::string						redirection; // return ...
+		std::vector<ServerConfig> 		chilren; // locaiton
+		
 	public:
+		ServerConfig();
+		~ServerConfig();
 		
 };
 

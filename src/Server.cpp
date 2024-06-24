@@ -1,30 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/24 15:23:01 by haejeong         ###   ########.fr       */
+/*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
+/*   Updated: 2024/06/24 14:45:43 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/Webserv.hpp"
+#include "../include/Server.hpp"
 
-int main(int ac, char *av[]) {
-    Webserv webserv;
+Server::Server() : serverFd(0) {
+	std::cout << "Server default constructor called" << std::endl;
+}
 
-    try {
-        if (ac != 2)
-            throw RuntimeException("Invalid argument number");
-        webserv.makeServerList(av[1]);
-        
-    } catch (const RuntimeException& e) {
-        std::cout << "Error : " << e.what() << std::endl;
-    }
-    
-
-
-    
+Server::~Server() {
+	std::cout << "Server destructor called" << std::endl;
 }

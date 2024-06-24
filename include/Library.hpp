@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   includes.hpp                                       :+:      :+:    :+:   */
+/*   library.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/21 16:21:47 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/24 15:49:01 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,17 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <cctype>
 
 #define PORT 8080
 #define BUFFER_SIZE 100
+#define MAX_BODY_SIZE 30000000
+#define READ_END "\r\n\r\n"
+
+class RuntimeException : public std::runtime_error {
+public:
+    RuntimeException(const std::string& message) 
+        : std::runtime_error(message) {}
+};
 
 #endif

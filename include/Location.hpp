@@ -1,36 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Webserv.hpp                                        :+:      :+:    :+:   */
+/*   Location.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/24 19:06:01 by haejeong         ###   ########.fr       */
+/*   Created: 2024/06/24 18:34:42 by haejeong          #+#    #+#             */
+/*   Updated: 2024/06/24 18:39:01 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef WEBSERV_HPP
-# define WEBSERV_HPP
+#ifndef LOCATION_HPP
+# define LOCATION_HPP
 
-#include "Server.hpp"
-#include "ConfigParsing.hpp"
-#include "ServerConfig.hpp"
+#include "Library.hpp"
 
-class Webserv {
+class Location {
 	private:
-		ConfigParsing						configParsing;
-		std::vector<std::string> 			configStrings;
-		std::map<int, Server> 				serverList;
-		std::map<int, std::vector<char> > 	clients;
-		int kq;
-
+		std::string						path; // location /path {}
+		std::string 					root; // root path
+		std::string						index;
+		bool 							autoIndex;
+		std::string						redirection; // return ...
+		
 	public:
-		Webserv();
-		~Webserv();
-
-		void makeServerConfigStringList(const std::string & configPath);
-		void makeServer();
+		Location();
+		~Location();
+		
 };
 
 #endif

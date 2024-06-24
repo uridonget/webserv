@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 15:18:15 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/24 18:02:41 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/24 19:04:55 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,8 +68,8 @@ void ConfigParsing::insertServerConfig(int start, std::string &fileInput) {
 		}
 		else if (fileInput[temp] == '}') {
 			if (cnt == 0) {
-				serverConfig = fileInput.substr(start, temp - start);
-				serverConfigs.push_back(serverConfig);
+				serverConfig = fileInput.substr(start, temp - start - 1);
+				configStrings.push_back(serverConfig);
 				fileInput = fileInput.substr(temp + 1, len - temp - 1);
 				return ;
 			}
@@ -93,6 +93,8 @@ void ConfigParsing::splitServer(std::string & fileInput) {
 		while (fileInput[i] && isspace(fileInput[i]))
 			i++;
 		if (fileInput[i] == '{') {
+			while (fileInput[i + 1] && isspace(fileInput[i + 1]))
+				i++;
 			insertServerConfig(i + 1, fileInput);
 		} else {
 			throw RuntimeException("Invalid configuration file [server]");
@@ -100,12 +102,12 @@ void ConfigParsing::splitServer(std::string & fileInput) {
 	}
 }
 
-void ConfigParsing::checkComment(std::string & fileInput) {
-	std::cout << "check !! " << fileInput;
-}
-
 void ConfigParsing::checkConfigs() {
-	for (std::vector<std::string>::iterator it = serverConfigs.begin(); it != serverConfigs.end(); it++) {
+	for (std::vector<std::string>::iterator it = configStrings.begin(); it != configStrings.end(); it++) {
 		std::cout << *it << std::endl;
 	}
+}
+
+std::vector<std::string> ConfigParsing::getConfigStrings() const {
+	return (this->configStrings);
 }

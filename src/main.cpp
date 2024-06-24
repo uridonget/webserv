@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/24 15:23:01 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/24 19:05:46 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@ int main(int ac, char *av[]) {
     try {
         if (ac != 2)
             throw RuntimeException("Invalid argument number");
-        webserv.makeServerList(av[1]);
+        webserv.makeServerConfigStringList(av[1]);
+        webserv.makeServer();
         
     } catch (const RuntimeException& e) {
         std::cout << "Error : " << e.what() << std::endl;

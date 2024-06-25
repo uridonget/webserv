@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 15:07:34 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 16:45:51 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,14 @@ class Server {
 	private:
 		ServerConfig 					config;
 		int								serverFd;
-		struct sockaddr_in 				serverAddress;
+		struct sockaddr_in 				serverAddr;
 		
 	public:
 		Server();
 		~Server();
 
-		void makeConfig(std::string & configString);
+		void initServer(ServerConfig & config);
+		size_t getListen();
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 15:11:00 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 15:51:10 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 16:10:46 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ class ConfigParsing {
 		void splitServer(std::string & fileInput);
 		
 		void setServerConfig();
+		std::vector<ServerConfig> getServerConfigs();
 };
 
 #endif

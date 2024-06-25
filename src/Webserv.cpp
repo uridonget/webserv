@@ -6,18 +6,18 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 15:54:32 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 16:51:13 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Webserv.hpp"
 
 Webserv::Webserv() : kq(0) {
-	std::cout << "Default Webserv constructor called" << std::endl;
+	// std::cout << "Default Webserv constructor called" << std::endl;
 }
 
 Webserv::~Webserv() {
-	std::cout << "Webserv destructor called" << std::endl;
+	// std::cout << "Webserv destructor called" << std::endl;
 }
 
 void Webserv::makeServerConfigStringList(const std::string & configPath) {
@@ -35,14 +35,18 @@ void Webserv::makeServerConfigStringList(const std::string & configPath) {
     configParsing.setServerConfig();
 }
 
-static std::vector<std::string> split(const std::string &str, char delimiter) {
-    std::vector<std::string> tokens;
-    std::string token;
-    std::stringstream ss(str);
-    
-    while (std::getline(ss, token, delimiter)) {
-        tokens.push_back(token);
+std::vector<ServerConfig> Webserv::getServerConfigs() {
+    return (this->configParsing.getServerConfigs());
+}
+
+void Webserv::makeServerList() {
+    std::vector<ServerConfig> configs;
+
+    configs = this->configParsing.getServerConfigs();
+    for (std::vector<ServerConfig>::iterator it = configs.begin(); it != configs.end(); it++) {
+        Server serv;
+        serv.initServer(*it);
+        std::map<int, Server> serverMap;
+        serverMap.insert(std::make_pair(serv.getListen(), serv));
     }
-    
-    return tokens;
 }

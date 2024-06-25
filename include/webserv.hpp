@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 15:53:41 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 16:13:42 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,7 @@
 class Webserv {
 	private:
 		ConfigParsing						configParsing;
-		std::vector<std::string> 			configStrings;
-		std::map<int, Server> 				serverList;
+		std::map<int, Server> 				serverList; // <port, Server>
 		std::map<int, std::vector<char> > 	clients;
 		int kq;
 
@@ -30,6 +29,8 @@ class Webserv {
 		~Webserv();
 
 		void makeServerConfigStringList(const std::string & configPath);
+		std::vector<ServerConfig> getServerConfigs();
+		void makeServerList();
 };
 
 #endif

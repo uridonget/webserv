@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 15:18:15 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 15:52:48 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 16:11:26 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,4 +113,8 @@ void ConfigParsing::setServerConfig() {
 		config.printConfig();
 		ServerConfigs.push_back(config);
 	}
+}
+
+std::vector<ServerConfig> ConfigParsing::getServerConfigs() {
+    return (this->ServerConfigs);
 }

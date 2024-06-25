@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:31:23 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 15:58:40 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 16:51:19 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,11 @@ ServerConfig::ServerConfig()
     clientMaxBodySize(0),
     index("index.html"),
     redirection("") {
-    std::cout << "ServerConfig default constructor called" << std::endl;
+    // std::cout << "ServerConfig default constructor called" << std::endl;
 }
 
 ServerConfig::~ServerConfig() {
-	std::cout << "ServerConfig destructor called" << std::endl;
+	// std::cout << "ServerConfig destructor called" << std::endl;
 }
 
 void ServerConfig::parseConfig(const std::string& configStr) {
@@ -104,4 +104,8 @@ void ServerConfig::printConfig() {
         std::cout << "Error Page: " << it->first << " -> " << it->second << std::endl;
     }
     std::cout << std::endl;
+}
+
+size_t ServerConfig::getListen() {
+    return (listen);
 }

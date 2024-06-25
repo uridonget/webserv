@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 15:18:15 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/24 19:04:55 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 15:52:48 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,12 +102,15 @@ void ConfigParsing::splitServer(std::string & fileInput) {
 	}
 }
 
-void ConfigParsing::checkConfigs() {
-	for (std::vector<std::string>::iterator it = configStrings.begin(); it != configStrings.end(); it++) {
-		std::cout << *it << std::endl;
-	}
-}
+// std::vector<std::string> ConfigParsing::getConfigStrings() const {
+// 	return (this->configStrings);
+// }
 
-std::vector<std::string> ConfigParsing::getConfigStrings() const {
-	return (this->configStrings);
+void ConfigParsing::setServerConfig() {
+	for (std::vector<std::string>::iterator it = configStrings.begin(); it != configStrings.end(); it++) {
+		ServerConfig config;
+		config.parseConfig(*it);
+		config.printConfig();
+		ServerConfigs.push_back(config);
+	}
 }

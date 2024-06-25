@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/24 14:45:43 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 15:09:26 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,4 +18,11 @@ Server::Server() : serverFd(0) {
 
 Server::~Server() {
 	std::cout << "Server destructor called" << std::endl;
+}
+
+
+
+void Server::makeConfig(std::string & configString) {
+	std::cout << "CHECK\n" << configString << std::endl;
+	
 }

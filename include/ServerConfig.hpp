@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:23:48 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/24 18:45:04 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 15:49:09 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,9 @@ class ServerConfig {
 	public:
 		ServerConfig();
 		~ServerConfig();
-		
+
+		void parseConfig(const std::string& configStr);
+		void printConfig();
 };
 
 #endif

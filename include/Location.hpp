@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 18:34:42 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 15:37:35 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/26 14:13:58 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ class Location {
 		std::string 					root; // root path
 		std::string						index;
 		bool 							autoindex;
-		std::string						redirection; // return ...
+		std::pair<int, std::string>		redirection;
 		
 	public:
 		Location();
@@ -31,8 +31,15 @@ class Location {
 		void setRoot(std::string root);
 		void setIndex(std::string index);
 		void setAutoIndex(bool autoindex);
-		void setRedirection(std::string redirection);
+		void setRedirection(int errorCode, std::string path);
 		
+		std::string getPath() const;
+		std::string getRoot() const;
+		std::string getIndex() const;
+		bool getAutoIndex() const;
+		std::pair<int, std::string> getRedirection() const;
+
+		void showLocation() const;
 };
 
 #endif

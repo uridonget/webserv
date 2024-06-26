@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 16:13:42 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 17:43:16 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@ class Webserv {
 		void makeServerConfigStringList(const std::string & configPath);
 		std::vector<ServerConfig> getServerConfigs();
 		void makeServerList();
+		void runServer();
+		
 };
 
 #endif

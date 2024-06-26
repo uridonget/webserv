@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 16:51:13 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/25 17:42:49 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,4 +49,8 @@ void Webserv::makeServerList() {
         std::map<int, Server> serverMap;
         serverMap.insert(std::make_pair(serv.getListen(), serv));
     }
+}
+
+void Webserv::runServer() {
+    
 }

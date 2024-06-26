@@ -1,6 +1,11 @@
 #include "../include/Location.hpp"
 
-Location::Location() {}
+Location::Location()
+	: path(""),
+	root(""),
+	index(""),
+	autoindex(false) {	
+}
 
 Location::~Location() {}
 
@@ -20,6 +25,44 @@ void Location::setAutoIndex(bool autoindex) {
 	this->autoindex = autoindex;
 }
 
-void Location::setRedirection(std::string redirection) {
-	this->redirection = redirection;
+void Location::setRedirection(int errorCode, std::string path) {
+	redirection.first = errorCode;
+	redirection.second = path;
+}
+
+std::string Location::getPath() const {
+	return (path);
+}
+
+std::string Location::getRoot() const {
+	return (root);
+}
+
+std::string Location::getIndex() const {
+	return (index);
+}
+
+bool Location::getAutoIndex() const {
+	return (autoindex);
+}
+
+std::pair<int, std::string> Location::getRedirection() const {
+	return (redirection);
+}
+
+void Location::showLocation() const {
+	std::cout << "-----------------------\n";
+	if (path.length())
+		std::cout << "path : " << getPath() << std::endl;
+	if (root.length())
+		std::cout << "root : " << getRoot() << std::endl;
+	if (index.length())
+		std::cout << "index : " << getIndex() << std::endl;
+	std::cout << "index : ";
+	if (getAutoIndex())
+		std::cout << "on" << std::endl;
+	else
+		std::cout << "off" << std::endl;
+	if (getRedirection().first != 0)
+		std::cout << "return : " << getRedirection().first << ", " << getRedirection().second << std::endl;
 }

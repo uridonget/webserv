@@ -25,6 +25,9 @@ class Buffer {
 		Buffer(int fd);
 		virtual ~Buffer();
 
+		Buffer(const Buffer &other);
+        Buffer &operator = (const Buffer& other);
+
 		virtual int whoAmI();
 		int getFd() const;
 		std::vector<char> getBuffer() const;

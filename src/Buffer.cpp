@@ -16,6 +16,19 @@ Buffer::Buffer(int fd) : fd(fd) {}
 
 Buffer::~Buffer() {}
 
+Buffer::Buffer(const Buffer& other) {
+	this->fd = other.getFd();
+	this->buffer = other.getBuffer();
+}
+
+Buffer& Buffer::operator = (const Buffer& other) {
+	if (this != &other) {
+	this->fd = other.getFd();
+	this->buffer = other.getBuffer();
+	}
+	return *this;
+}
+
 int Buffer::whoAmI() {
     return 0;
 }

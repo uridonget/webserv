@@ -181,29 +181,40 @@ std::string Webserv::make_response() {
 void Webserv::read_event(int idx) {
 	std::cout << "****** read event ******" << std::endl;
 	int client_fd = eventList[idx].ident;
-	std::map<int, std::vector<char> >::iterator it = clients.find(client_fd); 
-	if (it == clients.end()) {
+	// std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
+	Buffer it(-1);
+	for (std::vector<Buffer>::iterator iter = bufferList.begin(); iter != bufferList.end(); iter++ ) {
+		if ((*iter).getFd() == client_fd) {
+			it = *iter;
+			break;
+		}
+	}
+	if (iter == bufferList.end()) {
 		std::cout << "client not exist in server!!!" << std::endl;
 		return ;
 	}
-	for (int i = 0; i < bufferList.size(); i++) {
-		if (bufferList[i].getFd() == client_fd) {
-			bufferList[i];
-		}
+	if (it.getFd() == -1) {
+		
 	}
     char buf[BUFFER_SIZE] = {0};
     int n = read(client_fd, buf, BUFFER_SIZE);
     if (n == -1)
     {
-        clients.erase(client_fd);
-        close(client_fd);
-        struct kevent client_event;
-        EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-        changeList.push_back(client_event);
-        return ;
+		for (std::vector<Buffer>::iterator it = bufferList.begin(); it != bufferList.end(); it++ ) {
+			if (bufferList[i].getFd() == client_fd) {
+				bufferList.erase(bufferList.begin() + i);
+				break;
+			}
+		}
+		// clients.erase(client_fd);
+		close(client_fd);
+		struct kevent client_event;
+		EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		changeList.push_back(client_event);
+		return ;
     }
-    it->second.insert(it->second.end(), buf, buf + n);
-    std::cout << "buffer size : " << it->second.size() << std::endl;
+    it.getBuffer().insert(it.getBuffer().end(), buf, buf + n);
+    std::cout << "buffer size : " << it.getBuffer().size() << std::endl;
     if (n != BUFFER_SIZE) {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << "+++++++ read end +++++++" << std::endl;
@@ -225,21 +236,37 @@ void Webserv::write_event(int idx) {
     // }
     std::cout << "****** write event ******" << std::endl;
     int client_fd = eventList[idx].ident;
-    std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
-    if (it == clients.end()) {
-        std::cout << "clinet not exist in server!!!" << std::endl;
-        return ;
-    }
+    // std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
+    // if (it == clients.end()) {
+    //     std::cout << "clinet not exist in server!!!" << std::endl;
+    //     return ;
+    // }
+	Buffer it(-1);
+	for (std::vector<Buffer>::iterator it = bufferList.begin(); it != bufferList.end(); it++ ) {
+		if (bufferList[i].getFd() == client_fd) {
+			it = bufferList[i];
+		}
+	}
+	if (it.getFd() == -1) {
+		std::cout << "client not exist in server!!!" << std::endl;
+		return ;
+	}
     std::cout << "HTTP REQUEST" << std::endl;
-    std::cout << it->second.size() << std::endl;
-    for (int i=0; i < it->second.size(); i++) {
-        std::cout << it->second[i];
+    std::cout << it.getBuffer().size() << std::endl;
+    for (int i=0; i < it.getBuffer().size(); i++) {
+        std::cout << it.getBuffer()[i];
     }
     std::string response = make_response();
     int n = write(client_fd, response.c_str(), response.length());
     if (n == -1)
     {
-        clients.erase(client_fd);
+		// clients.erase(client_fd);
+		for (std::vector<Buffer>::iterator it = bufferList.begin(); it != bufferList.end(); it++ ) {
+			if (bufferList[i].getFd() == client_fd) {
+				bufferList.erase(bufferList.begin() + i);
+				break;
+			}
+		}
         close(client_fd);
         struct kevent client_event;
         // struct kevent client_event2;

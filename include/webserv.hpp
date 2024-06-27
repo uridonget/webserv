@@ -41,7 +41,7 @@ class Webserv {
 		void makeServerList();
 		void initKqueue();
 		void connectKqueueToServer();
-		void ioMultiplexing();
+		// void ioMultiplexing();
 		bool checkSocketError(int idx);
 		void runServers();
 		

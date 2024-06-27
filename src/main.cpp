@@ -3,21 +3,38 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/21 16:34:52 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/27 16:26:11 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/webserv.hpp"
+#include "../include/Webserv.hpp"
 
-webserv::webserv() {}
+int main(int ac, char *av[]) {
+    Webserv webserv;
 
-webserv::~webserv() {}
+    try {
+        if (ac != 2)
+            throw RuntimeException("Invalid argument number");
+        webserv.makeServerConfigStringList(av[1]);
+        
+        webserv.initKqueue();
+        
+        webserv.makeServerList();
+        
+        webserv.connectKqueueToServer();
 
-int main() {
-    webserv server;
+        webserv.runServers();
+        
+        // 이제 시작이야!
+        
+    } catch (const RuntimeException& e) {
+        std::cout << "Error : " << e.what() << std::endl;
+    }
+    
+
 
     
 }

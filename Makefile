@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+         #
+#    By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/04/12 10:20:27 by haejeong          #+#    #+#              #
-#    Updated: 2024/06/21 16:14:51 by haejeong         ###   ########.fr        #
+#    Updated: 2024/06/27 16:26:14 by sangyhan         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME	 = a.out
 
 CXX		 = c++
 
-CXXFLAGS = # -Wall -Wextra -Werror -std=c++98
+CXXFLAGS = -fsanitize=address # -Wall -Wextra -Werror -std=c++98
 
 SRCS	 = $(wildcard src/*.cpp)
 

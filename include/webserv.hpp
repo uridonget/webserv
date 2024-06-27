@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Webserv.hpp                                        :+:      :+:    :+:   */
+/*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 17:43:16 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/27 11:24:23 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,11 @@ class Webserv {
 	private:
 		ConfigParsing						configParsing;
 		std::map<int, Server> 				serverList; // <port, Server>
-		std::map<int, std::vector<char> > 	clients;
+		std::map<int, std::vector<char> > 	clients; // I/OMultiplexing으로 변경할 예정
 		int kq;
+		std::vector<struct kevent> changeList;
+		struct kevent eventList[10];
+
 
 	public:
 		Webserv();
@@ -31,7 +34,10 @@ class Webserv {
 		void makeServerConfigStringList(const std::string & configPath);
 		std::vector<ServerConfig> getServerConfigs();
 		void makeServerList();
-		void runServer();
+		void runServers();
+
+		void initKqueue();
+		void connectKqueueToServer();
 		
 };
 

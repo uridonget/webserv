@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/25 17:42:49 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/27 11:27:23 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,11 +46,25 @@ void Webserv::makeServerList() {
     for (std::vector<ServerConfig>::iterator it = configs.begin(); it != configs.end(); it++) {
         Server serv;
         serv.initServer(*it);
+        EV_SET(&changeList[0], serv.getServerFd(), EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
         std::map<int, Server> serverMap;
         serverMap.insert(std::make_pair(serv.getListen(), serv));
     }
 }
 
-void Webserv::runServer() {
+void Webserv::runServers() {
+    for (std::map<int, Server>::iterator it = serverList.begin(); it != serverList.end(); it++) {
+        // it->second.runServer();
+    }
+}
+
+void Webserv::initKqueue() {
+    kq = kqueue();
+    if (kq < 0) {
+        throw RuntimeException("kqueue");
+    }
+}
+
+void Webserv::connectKqueueToServer() {
     
 }

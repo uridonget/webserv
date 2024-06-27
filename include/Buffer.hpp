@@ -24,8 +24,10 @@ class Buffer {
 	public:
 		Buffer();
 		virtual ~Buffer();
-		// Buffer(const Buffer& other);
-		// Buffer& operator=(const Buffer& other);
+
+		virtual int whoAmI() = 0;
+		int getFd() const;
+		std::vector<char> getBuffer() const;
 
 
 };

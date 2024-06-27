@@ -23,6 +23,8 @@ class File : public Buffer {
 		File();
 		~File();
 
+		int whoAmI();
+
 };
 
 #endif

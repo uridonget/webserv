@@ -12,14 +12,14 @@
 
 #include "../include/Buffer.hpp"
 
-// Buffer::Buffer() {}
+Buffer::Buffer() {}
 
-// Buffer::~Buffer() {}
+Buffer::~Buffer() {}
 
-// Buffer::Buffer(const Buffer& other) {}
+int Buffer::getFd() const {
+    return this->fd;
+}
 
-// Buffer& Buffer::operator=(const Buffer& other) {
-// 	if (this != &other) {
-// 	}
-// 	return *this;
-// }
+std::vector<char> Buffer::getBuffer() const {
+    return this->buffer;
+}

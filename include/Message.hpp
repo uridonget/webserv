@@ -23,6 +23,8 @@ class Message : public Buffer {
 		Message();
 		~Message();
 
+		int whoAmI();
+
 };
 
 #endif

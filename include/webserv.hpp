@@ -16,6 +16,9 @@
 #include "Server.hpp"
 #include "ConfigParsing.hpp"
 #include "ServerConfig.hpp"
+#include "Buffer.hpp"
+#include "Message.hpp"
+#include "File.hpp"
 
 class Webserv {
 	private:
@@ -25,6 +28,7 @@ class Webserv {
 		int kq;
 		std::vector<struct kevent> changeList;
 		struct kevent eventList[10];
+		std::vector<Buffer> bufferList;
 
 
 	public:
@@ -38,6 +42,7 @@ class Webserv {
 
 		void initKqueue();
 		void connectKqueueToServer();
+		void ioMultiplexing();
 		
 };
 

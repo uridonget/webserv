@@ -11,3 +11,11 @@
 /* ************************************************************************** */
 
 #include "../include/Message.hpp"
+
+Message::Message() {}
+
+Message::~Message() {}
+
+int Message::whoAmI() {
+    return 1;
+}

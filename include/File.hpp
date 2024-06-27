@@ -20,7 +20,7 @@ class File : public Buffer {
 
 
 	public:
-		File();
+		File(int fd);
 		~File();
 
 		int whoAmI();

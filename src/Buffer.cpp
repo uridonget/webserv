@@ -12,9 +12,13 @@
 
 #include "../include/Buffer.hpp"
 
-Buffer::Buffer() {}
+Buffer::Buffer(int fd) : fd(fd) {}
 
 Buffer::~Buffer() {}
+
+int Buffer::whoAmI() {
+    return 0;
+}
 
 int Buffer::getFd() const {
     return this->fd;

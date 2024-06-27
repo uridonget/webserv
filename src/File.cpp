@@ -12,7 +12,7 @@
 
 #include "../include/File.hpp"
 
-File::File() {}
+File::File(int fd) : Buffer(fd) {}
 
 File::~File() {}
 

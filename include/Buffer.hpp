@@ -22,10 +22,10 @@ class Buffer {
 		std::vector<char> buffer;
 
 	public:
-		Buffer();
+		Buffer(int fd);
 		virtual ~Buffer();
 
-		virtual int whoAmI() = 0;
+		virtual int whoAmI();
 		int getFd() const;
 		std::vector<char> getBuffer() const;
 

@@ -12,7 +12,7 @@
 
 #include "../include/Message.hpp"
 
-Message::Message() {}
+Message::Message(int fd) : Buffer(fd) {}
 
 Message::~Message() {}
 

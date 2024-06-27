@@ -20,7 +20,7 @@ class Message : public Buffer {
 
 
 	public:
-		Message();
+		Message(int fd);
 		~Message();
 
 		int whoAmI();

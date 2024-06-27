@@ -70,7 +70,8 @@ bool Webserv::checkSocketError(int idx) {
             throw RuntimeException("Server socket");
         } else {
             close(eventList[idx].ident);
-            clients.erase(eventList[idx].ident);
+            bufferList.erase(bufferList.begin() + idx);
+            // clients.erase(eventList[idx].ident);
             return true;
         }
     }
@@ -144,9 +145,12 @@ void Webserv::new_client(int serverFd) {
         EV_SET(&client_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
         std::cout << "---- new client added " << client_fd << " ----" << std::endl;
         changeList.push_back(client_event);
-        clients[client_fd] = std::vector<char>();
-        if (clients.find(client_fd) == clients.end())
-            exit(1);
+
+        Message newClient(client_fd);
+        bufferList.push_back(newClient);
+        // clients[client_fd] = std::vector<char>();
+        // if (clients.find(client_fd) == clients.end())
+        //     exit(1);
     }
 }
 
@@ -175,13 +179,18 @@ std::string Webserv::make_response() {
 }
 
 void Webserv::read_event(int idx) {
-    std::cout << "****** read event ******" << std::endl;
-    int client_fd = eventList[idx].ident;
-    std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
-    if (it == clients.end()) {
-        std::cout << "client not exist in server!!!" << std::endl;
-        return ;
-    }
+	std::cout << "****** read event ******" << std::endl;
+	int client_fd = eventList[idx].ident;
+	std::map<int, std::vector<char> >::iterator it = clients.find(client_fd); 
+	if (it == clients.end()) {
+		std::cout << "client not exist in server!!!" << std::endl;
+		return ;
+	}
+	for (int i = 0; i < bufferList.size(); i++) {
+		if (bufferList[i].getFd() == client_fd) {
+			bufferList[i];
+		}
+	}
     char buf[BUFFER_SIZE] = {0};
     int n = read(client_fd, buf, BUFFER_SIZE);
     if (n == -1)

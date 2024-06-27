@@ -24,7 +24,7 @@ class Webserv {
 	private:
 		ConfigParsing						configParsing;
 		std::map<int, Server> 				serverList; // <port, Server>
-		std::map<int, std::vector<char> > 	clients; // I/OMultiplexing으로 변경할 예정
+		// std::map<int, std::vector<char> > 	clients; // I/OMultiplexing으로 변경할 예정
 		std::set<int> serverFdSet;
 		int kq;
 		std::vector<struct kevent> changeList;

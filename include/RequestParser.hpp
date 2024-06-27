@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:10:04 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/27 16:22:30 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/06/27 17:03:30 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,8 @@ private:
 
 public:
     static const size_t npos = 18446744073709551615UL;
-    RequestParser();
-    ~RequestParser();
+    RequestParser() {};
+    ~RequestParser() {};
     size_t checkEnd(std::vector<char> &buf, char *append, size_t size);
 };
 

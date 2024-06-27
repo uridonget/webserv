@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 16:50:05 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/27 17:06:28 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,6 +223,8 @@ std::string Webserv::make_response()
     return (response);
 }
 
+#include "../include/RequestParser.hpp"
+
 void Webserv::read_event(int idx)
 {
     std::cout << "****** read event ******" << std::endl;
@@ -246,9 +248,10 @@ void Webserv::read_event(int idx)
         changeList.push_back(client_event);
         return;
     }
-    it->second.insert(it->second.end(), buf, buf + n);
+    RequestParser parser;
+    //it->second.insert(it->second.end(), buf, buf + n);
     std::cout << "buffer size : " << it->second.size() << std::endl;
-    if (n != BUFFER_SIZE)
+    if (parser.checkEnd(it->second,buf,n) != RequestParser::npos)
     {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << "+++++++ read end +++++++" << std::endl;

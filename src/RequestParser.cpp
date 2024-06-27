@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/25 18:53:52 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/06/27 16:22:19 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ size_t RequestParser::kmp(std::vector<char> &buf, std::string &target, size_t st
 			return (i - target.size() + 1);
 		}
 	}
-	return std::string::npos;
+	return RequestParser::npos;
 }
 
 size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
@@ -58,7 +58,7 @@ size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
 
     if (buf.size() + size < 4)
     {
-        return (-1);
+        return (RequestParser::npos);
     }
     else if (buf.size() < 3)
     {
@@ -70,9 +70,9 @@ size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
     }
     buf.insert(buf.end(), append, append + size);
     res = kmp(buf, target, start);
-    if (res == std::string::npos)
+    if (res == RequestParser::npos)
     {
-        return (std::string::npos);
+        return (RequestParser::npos);
     }
     else
     {
@@ -82,17 +82,17 @@ size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
 
 enum METHOD RequestParser::checkMethod()
 {
-    
+    return GET;
 }
 
 size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size)
 {
     size_t pos = findEnd(buf, append, size);
-    if (pos != std::string::npos)
+    if (pos != RequestParser::npos)
     {
         std::string content_header("content-length:");
         size_t content_len_pos = kmp(buf, content_header, 0);
-        if (content_len_pos == std::string::npos)
+        if (content_len_pos == RequestParser::npos)
         {
             // no need content
             // message done
@@ -120,7 +120,7 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
             else
             {
                 // need more body
-                return (std::string::npos);
+                return (RequestParser::npos);
             }
         }
     }

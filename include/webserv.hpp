@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 11:24:23 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/27 12:47:53 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ class Webserv {
 		ConfigParsing						configParsing;
 		std::map<int, Server> 				serverList; // <port, Server>
 		std::map<int, std::vector<char> > 	clients; // I/OMultiplexing으로 변경할 예정
+		std::set<int> serverFdSet;
 		int kq;
 		std::vector<struct kevent> changeList;
 		struct kevent eventList[10];
@@ -38,12 +39,18 @@ class Webserv {
 		void makeServerConfigStringList(const std::string & configPath);
 		std::vector<ServerConfig> getServerConfigs();
 		void makeServerList();
-		void runServers();
-
 		void initKqueue();
 		void connectKqueueToServer();
 		void ioMultiplexing();
+		bool checkSocketError(int idx);
+		void runServers();
 		
+		int checkNewClient(uintptr_t enventIdent);
+
+		void new_client(int serverFd);
+		std::string make_response();
+		void read_event(int idx);
+		void write_event(int idx);
 };
 
 #endif

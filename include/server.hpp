@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 11:24:34 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/27 13:40:21 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,8 @@ class Server {
 		void initServer(ServerConfig & config);
 		size_t getListen();
 		int getServerFd();
-		void runServer(int kq, std::vector<struct kevent> & changeList, struct kevent (&eventList)[10]);
+
+		void set_nonblock(int fd);
 };
 
 #endif

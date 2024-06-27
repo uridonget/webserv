@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 15:09:33 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/27 15:48:42 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,21 +82,29 @@ void Webserv::runServers() {
     timeout.tv_sec = 5;
     timeout.tv_nsec = 0;
 
+    signal(SIGPIPE, SIG_IGN);
+    int cnt = 0;
     while (true) {
+        // if (cnt == 20)
+        //     std::exit(0);
         int nev = kevent(kq, &changeList[0], changeList.size(), eventList, 10, &timeout);
         std::cout << "NUMBER OF EVENT : " << nev << std::endl;
         if (nev < 0) {
             perror("kqueue");
             throw RuntimeException("kqueue1");
         }
-        else if (nev == 0) {
+        changeList.clear();
+        if (nev == 0) {
             std::cout << "NO EVENT" << std::endl;
             continue ;
         }
-        changeList.clear();
         for (int i=0; i < nev; i++) {
             if (checkSocketError(i))
                 continue ; // error check
+            if (eventList[i].flags & EV_DELETE) {
+                std::cout << "check" << std::endl;
+                continue ;
+            }
             int temp = checkNewClient(eventList[i].ident);
             if (temp > 0) {
                 new_client(eventList[i].ident); // new client
@@ -170,8 +178,21 @@ void Webserv::read_event(int idx) {
     std::cout << "****** read event ******" << std::endl;
     int client_fd = eventList[idx].ident;
     std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
+    if (it == clients.end()) {
+        std::cout << "client not exist in server!!!" << std::endl;
+        return ;
+    }
     char buf[BUFFER_SIZE] = {0};
     int n = read(client_fd, buf, BUFFER_SIZE);
+    if (n == -1)
+    {
+        clients.erase(client_fd);
+        close(client_fd);
+        struct kevent client_event;
+        EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+        changeList.push_back(client_event);
+        return ;
+    }
     it->second.insert(it->second.end(), buf, buf + n);
     std::cout << "buffer size : " << it->second.size() << std::endl;
     if (n != BUFFER_SIZE) {
@@ -186,27 +207,42 @@ void Webserv::read_event(int idx) {
 }
 
 void Webserv::write_event(int idx) {
-    if (eventList[idx].flags == EV_DELETE) {
-        close(eventList[idx].ident);
-        clients.erase(eventList[idx].ident);
-        return ;
-    }
+    // if (eventList[idx].flags == EV_DELETE) {
+    //     // close(eventList[idx].ident);
+    //     // clients.erase(eventList[idx].ident);
+    //     // serverFdSet.erase(eventList[idx].ident);
+    //     std::cout << "여기입니다!" << std::endl;
+    //     return ;
+    // }
     std::cout << "****** write event ******" << std::endl;
     int client_fd = eventList[idx].ident;
     std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
+    if (it == clients.end()) {
+        std::cout << "clinet not exist in server!!!" << std::endl;
+        return ;
+    }
     std::cout << "HTTP REQUEST" << std::endl;
     std::cout << it->second.size() << std::endl;
     for (int i=0; i < it->second.size(); i++) {
         std::cout << it->second[i];
     }
     std::string response = make_response();
-    write(client_fd, response.c_str(), response.length());
+    int n = write(client_fd, response.c_str(), response.length());
+    if (n == -1)
+    {
+        clients.erase(client_fd);
+        close(client_fd);
+        struct kevent client_event;
+        // struct kevent client_event2;
+        // EV_SET(&client_event2, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+        EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+        changeList.push_back(client_event);
+        // changeList.push_back(client_event2);
+        return ;
+    }
     struct kevent client_event1;
-    EV_SET(&client_event1, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    EV_SET(&client_event1, client_fd, EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
     changeList.push_back(client_event1);
-    struct kevent client_event;
-    EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    changeList.push_back(client_event);
 }
 
 void Webserv::connectKqueueToServer() {

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 10:56:25 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 11:48:01 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,12 @@ enum REQUEST_STATE
     REQUEST_START = 1,
     HEADER_END = 2,
     CONTENT_END = 3,
+};
+
+struct request {
+    enum METHOD method;
+    std::string httpVersion;
+    
 };
 
 class RuntimeException : public std::runtime_error {

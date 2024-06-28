@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/28 15:38:04 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 16:42:16 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,11 +83,11 @@ size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
 size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size, size_t & endHeader)
 {
     size_t pos = findEnd(buf, append, size);
+    endHeader = pos;
     if (pos != RequestParser::npos)
     {
         std::string content_header = "Content-Length:";
         size_t content_len_pos = kmp(buf, content_header, 0);
-        std::cout << content_len_pos << std::endl;
         if (content_len_pos == RequestParser::npos)
         {
             // no need content
@@ -117,17 +117,15 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
             else
             {
                 // need more body
-                std::cout << "*****2" << std::endl;
                 return (RequestParser::npos);
             }
         }
     }
     // header not done
-    std::cout << "*****1" << std::endl;
     return (RequestParser::npos);
 }
 
-struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, size_t endIndex) {
+struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, size_t endIndex, size_t & endHeader) {
     struct HttpRequest parsedRequest;
     
     std::string request(fullRequest.begin(), fullRequest.begin() + endIndex + 1);
@@ -178,8 +176,13 @@ struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, 
             if (tokens.size() != 2) {
                 throw RuntimeException("invalid http request header4");
             }
-            parsedRequest.contentLenght = tokens[1];
+            parsedRequest.contentLength = tokens[1];
         }
+        else if (line.length() == 0) 
+            break ;
+    }
+    for (int i=0; endHeader + i < endIndex; i++) {
+        parsedRequest.body.push_back(request[i]);
     }
     return parsedRequest;
 }

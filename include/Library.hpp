@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 15:17:06 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 16:39:54 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ struct HttpRequest {
     std::string host;
     std::string userAgent;
     std::string accept;
-    std::string contentLenght;
+    std::string contentLength;
     std::vector<char> body;
 
     HttpRequest()
@@ -68,7 +68,7 @@ struct HttpRequest {
         host(""), 
         userAgent(""), 
         accept(""),
-        contentLenght("") {}
+        contentLength("") {}
 };
 
 class RuntimeException : public std::runtime_error {

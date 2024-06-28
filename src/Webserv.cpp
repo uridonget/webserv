@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 15:38:10 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 16:46:10 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -232,8 +232,13 @@ void showRequest(HttpRequest &request) {
     std::cout << "Host: " << request.host << std::endl;
     std::cout << "User-Agent: " << request.userAgent << std::endl;
     std::cout << "Accept: " << request.accept << std::endl;
-    if (request.contentLenght.size()) {
-        std::cout << "Content-Length: " << request.contentLenght << std::endl;
+    if (request.contentLength.size()) {
+        std::cout << "Content-Length: " << request.contentLength << std::endl;
+        std::cout << std::endl;
+        for (std::vector<char >::iterator it = request.body.begin(); it != request.body.end(); it++) {
+            std::cout << *it;
+        }
+        std::cout << std::endl;
     }
 }
 
@@ -263,7 +268,8 @@ void Webserv::read_event(int idx)
     RequestParser parser;
     size_t endHeader;
     size_t endIndex = parser.checkEnd(it->second, buf, n, endHeader);
-    std::cout << endIndex << std::endl;
+    std::cout << "end header : " << endHeader << std::endl;
+    std::cout << "end index : " << endIndex << std::endl;
     if (endIndex != RequestParser::npos)
     {
         std::cout << "++++++++++++++++++++++++" << std::endl;
@@ -273,7 +279,7 @@ void Webserv::read_event(int idx)
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << str << std::endl;
         std::cout << "++++++++++++++++++++++++" << std::endl;
-        HttpRequest request = parser.requestParsing(it->second, endIndex);
+        HttpRequest request = parser.requestParsing(it->second, endIndex, endHeader);
         showRequest(request);
         std::cout << std::endl;
         struct kevent client_event;
@@ -291,12 +297,6 @@ void Webserv::write_event(int idx)
     {
         std::cout << "client not exist in server!!!" << std::endl;
         return;
-    }
-    std::cout << "HTTP REQUEST" << std::endl;
-    std::cout << it->second.size() << std::endl;
-    for (int i = 0; i < it->second.size(); i++)
-    {
-        std::cout << it->second[i];
     }
     std::string response = make_response();
     int n = write(client_fd, response.c_str(), response.length());

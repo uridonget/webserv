@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 14:24:15 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 14:59:49 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -232,6 +232,9 @@ void showRequest(HttpRequest &request) {
     std::cout << "Host: " << request.host << std::endl;
     std::cout << "User-Agent: " << request.userAgent << std::endl;
     std::cout << "Accept: " << request.accept << std::endl;
+    if (request.contentLenght.size()) {
+        std::cout << "Content-Length: " << request.contentLenght << std::endl;
+    }
 }
 
 void Webserv::read_event(int idx)
@@ -258,14 +261,15 @@ void Webserv::read_event(int idx)
         return;
     }
     RequestParser parser;
-    //it->second.insert(it->second.end(), buf, buf + n);
-    std::cout << "buffer size : " << it->second.size() << std::endl;
     size_t endIndex = parser.checkEnd(it->second,buf,n);
+    std::cout << endIndex << std::endl;
     if (endIndex != RequestParser::npos)
     {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << "+++++++ read end +++++++" << std::endl;
         std::cout << "++++++++++++++++++++++++" << std::endl;
+        std::string str(it->second.begin(), it->second.end());
+        std::cout << str << std::endl;
         HttpRequest request = parser.requestParsing(it->second, endIndex);
         showRequest(request);
         std::cout << std::endl;

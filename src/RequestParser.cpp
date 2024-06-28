@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/28 14:01:22 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 15:07:51 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +85,10 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
     size_t pos = findEnd(buf, append, size);
     if (pos != RequestParser::npos)
     {
-        std::string content_header("content-length:");
+        std::string content_header = "Content-Length:";
         size_t content_len_pos = kmp(buf, content_header, 0);
+        std::cout << "!!!!!!!!!!!!!!!!!!!" << std::endl;
+        std::cout << content_len_pos << std::endl;
         if (content_len_pos == RequestParser::npos)
         {
             // no need content
@@ -102,23 +104,28 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
                 content_len_tail++;
             }
             std::string temp;
-            for (int k = 0; k < content_len_tail - content_len_pos; k++)
+            for (int k = content_len_pos + content_header.size(); k < content_len_tail; k++)
             {
-                temp += buf[content_len_pos + k];
+                temp += buf[k];
             }
             int content_len = std::atoi(temp.c_str());
-            if (content_len >= 0 && pos + 1 + content_len >= buf.size())
+            std::cout << "content-length is :" << content_len << std::endl;
+            if (content_len >= 0 && pos + 4 + content_len >= buf.size())
             {
                 // message done
+                
                 return (pos + content_len);
             }
             else
             {
                 // need more body
+                std::cout << "*****2" << std::endl;
                 return (RequestParser::npos);
             }
         }
     }
+    // header not done
+    std::cout << "*****1" << std::endl;
     return (RequestParser::npos);
 }
 
@@ -168,6 +175,12 @@ struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, 
                 throw RuntimeException("invalid http request header4");
             }
             parsedRequest.accept = tokens[1];
+        }
+        else if (tokens[0] == "Content-Length:") {
+            if (tokens.size() != 2) {
+                throw RuntimeException("invalid http request header4");
+            }
+            parsedRequest.contentLenght = tokens[1];
         }
     }
     return parsedRequest;

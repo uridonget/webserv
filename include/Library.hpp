@@ -6,12 +6,12 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 13:38:14 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 14:39:06 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef INCLUDES_HPP
-# define INCLUDES_HPP
+#ifndef LIBRARY_HPP
+# define LIBRARY_HPP
 
 #include <iostream>
 #include <cstring>
@@ -58,6 +58,7 @@ struct HttpRequest {
     std::string host;
     std::string userAgent;
     std::string accept;
+    std::string contentLenght;
 
     HttpRequest()
         : method(""), 
@@ -65,7 +66,8 @@ struct HttpRequest {
         httpVersion(""), 
         host(""), 
         userAgent(""), 
-        accept("") {}
+        accept(""),
+        contentLenght("") {}
 };
 
 class RuntimeException : public std::runtime_error {

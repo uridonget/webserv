@@ -30,6 +30,11 @@ void Location::setRedirection(int errorCode, std::string path) {
 	redirection.second = path;
 }
 
+void Location::setAllowedMethods(std::set<METHOD> methods) {
+	allowedMethods.clear();
+	allowedMethods = methods;
+}
+
 std::string Location::getPath() const {
 	return (path);
 }
@@ -50,6 +55,10 @@ std::pair<int, std::string> Location::getRedirection() const {
 	return (redirection);
 }
 
+std::set<METHOD> Location::getAllowedMethods() const {
+	return (allowedMethods);
+}
+
 void Location::showLocation() const {
 	std::cout << "-----------------------\n";
 	if (path.length())
@@ -65,4 +74,17 @@ void Location::showLocation() const {
 		std::cout << "off" << std::endl;
 	if (getRedirection().first != 0)
 		std::cout << "return : " << getRedirection().first << ", " << getRedirection().second << std::endl;
+	if (allowedMethods.size()) {
+		std::cout << "Allowed Methods : ";
+		for (std::set<METHOD>::iterator it = allowedMethods.begin(); it != allowedMethods.end(); it++) {
+			if (*it == GET) {
+				std::cout << "GET ";
+			} else if (*it == POST) {
+				std::cout << "POST ";
+			} else if (*it == DELETE) {
+				std::cout << "DELETE ";
+			}
+		}
+		std::cout << std::endl;
+	}
 }

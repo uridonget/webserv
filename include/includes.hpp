@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Library.hpp                                        :+:      :+:    :+:   */
+/*   includes.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 10:56:25 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/21 16:21:47 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,38 +23,11 @@
 #include <fcntl.h>
 #include <algorithm>
 #include <map>
-#include <set>
 #include <vector>
 #include <fstream>
 #include <sstream>
-#include <cctype>
 
+#define PORT 8080
 #define BUFFER_SIZE 100
-#define MAX_BODY_SIZE 30000000
-#define READ_END "\r\n\r\n"
-
-enum METHOD
-{
-    NONE = 1,
-    GET = 2,
-    POST = 3,
-    DELETE = 4,
-    PUT = 5,
-    CONNECT = 6,
-    OPTION = 7,
-};
-
-enum REQUEST_STATE
-{
-    REQUEST_START = 1,
-    HEADER_END = 2,
-    CONTENT_END = 3,
-};
-
-class RuntimeException : public std::runtime_error {
-public:
-    RuntimeException(const std::string& message) 
-        : std::runtime_error(message) {}
-};
 
 #endif

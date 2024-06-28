@@ -6,19 +6,21 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 15:48:42 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/27 17:06:28 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Webserv.hpp"
 #include "../include/Server.hpp"
 
-Webserv::Webserv() : kq(0) {
-	// std::cout << "Default Webserv constructor called" << std::endl;
+Webserv::Webserv() : kq(0)
+{
+    // std::cout << "Default Webserv constructor called" << std::endl;
 }
 
-Webserv::~Webserv() {
-	// std::cout << "Webserv destructor called" << std::endl;
+Webserv::~Webserv()
+{
+    // std::cout << "Webserv destructor called" << std::endl;
 }
 
 void Webserv::makeServerConfigStringList(const std::string & configPath) {

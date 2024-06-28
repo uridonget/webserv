@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:23:48 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/26 12:51:01 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 11:01:51 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ class ServerConfig {
 		std::map<int, std::string>		errorPages; // <errorNum, path>
 		std::pair<int, std::string>		redirection; // return ...
 		std::vector<Location> 			locationList; // locaiton list
+		std::set<METHOD> 				allowedMethods; // allowed method
 
 		unsigned long					clientMaxBodySize;
 		

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 17:06:28 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 20:02:43 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,11 +68,12 @@ int Webserv::checkNewClient(uintptr_t eventIdent) {
 
 bool Webserv::checkSocketError(int idx, int bufferIdx) {
 	if (eventList[idx].flags == EV_ERROR) {
+		std::cerr << "***************** EV_ERROR ENTERED *****************" << std::endl; 
 		if (checkNewClient(eventList[idx].ident)) {
 			throw RuntimeException("Server socket");
 		} else {
-			close(eventList[idx].ident);
-			bufferList.erase(bufferList.begin() + bufferIdx);
+			// close(eventList[idx].ident);
+			// bufferList.erase(bufferList.begin() + bufferIdx);
 			// clients.erase(eventList[idx].ident);
 			return true;
 		}
@@ -107,7 +108,7 @@ void Webserv::runServers()
 		}
 		for (int i = 0; i < nev; i++)
 		{
-			printf("\n----filter : %d fflags : %d flags : %d ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
+			printf("\n----filter : %d fflags : %x flags : %x ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
 
 			int j = 0;
 			for (; j < bufferList.size(); j++) {
@@ -116,29 +117,33 @@ void Webserv::runServers()
 				}
 			}
 
-			if (checkSocketError(i, j))
+			if (checkSocketError(i, j)) {
+				// close(eventList[i].ident);
 				continue; // error check
+			}
 			if (eventList[i].flags & EV_DELETE)
 			{
 				std::cout << "check" << std::endl;
+				// close(eventList[i].ident);
 				continue;
 			}
-			// if (eventList[i].flags & EV_EOF)
-			// {
-			// 	for (int i = 0; i < bufferList.size(); i++) {
-			// 		if (bufferList[i].getFd() == eventList[i].ident) {
-			// 			bufferList.erase(bufferList.begin() + i);
-			// 			break;
-			// 		}
-			// 	}
-			// 	// clients.erase(eventList[i].ident);
-			// 	close(eventList[i].ident);
-			// 	struct kevent client_event;
-			// 	EV_SET(&client_event, eventList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-			// 	changeList.push_back(client_event);
-			// 	std::cout << "EOF" << std::endl;
-			// 	continue;
-			// }
+			if (eventList[i].flags & EV_EOF)
+			{
+				std::cerr << "***************** EV_EOF ENTERED *****************" << std::endl; 
+				for (int i = 0; i < bufferList.size(); i++) {
+					if (bufferList[i].getFd() == eventList[i].ident) {
+						bufferList.erase(bufferList.begin() + i);
+						break;
+					}
+				}
+				// clients.erase(eventList[i].ident);
+				close(eventList[i].ident);
+				struct kevent client_event;
+				EV_SET(&client_event, eventList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+				changeList.push_back(client_event);
+				std::cout << "EOF" << std::endl;
+				continue;
+			}
 			int temp = checkNewClient(eventList[i].ident);
 			if (temp > 0)
 			{
@@ -274,7 +279,9 @@ void Webserv::readEvent(int idx, int bufferIdx) {
         std::cout << "+++++++ read end +++++++" << std::endl;
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << std::endl;
-        struct kevent client_event;
+        bufferList[bufferIdx].getBuffer().clear();
+		struct kevent client_event;
+
         EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
         changeList.push_back(client_event);
 

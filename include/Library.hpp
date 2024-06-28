@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Library.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 16:39:54 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 19:53:55 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@
 #include <sstream>
 #include <cctype>
 
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 1000
 #define MAX_BODY_SIZE 30000000
 #define READ_END "\r\n\r\n"
 

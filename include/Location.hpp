@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 18:34:42 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/26 14:13:58 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 11:09:46 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ class Location {
 		std::string						index;
 		bool 							autoindex;
 		std::pair<int, std::string>		redirection;
+		std::set<METHOD> 				allowedMethods; // allowed method
 		
 	public:
 		Location();
@@ -32,12 +33,14 @@ class Location {
 		void setIndex(std::string index);
 		void setAutoIndex(bool autoindex);
 		void setRedirection(int errorCode, std::string path);
+		void setAllowedMethods(std::set<METHOD>);
 		
 		std::string getPath() const;
 		std::string getRoot() const;
 		std::string getIndex() const;
 		bool getAutoIndex() const;
 		std::pair<int, std::string> getRedirection() const;
+		std::set<METHOD> getAllowedMethods() const;
 
 		void showLocation() const;
 };

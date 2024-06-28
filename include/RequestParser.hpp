@@ -6,33 +6,14 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:10:04 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/27 17:03:30 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 10:56:43 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef REQUESTPARSER_HPP
 #define REQUESTPARSER_HPP
 
-#include <vector>
-#include <string>
-
-enum METHOD
-{
-    NONE = 1,
-    GET = 2,
-    POST = 3,
-    DELETE = 4,
-    PUT = 5,
-    CONNECT = 6,
-    OPTION = 7,
-};
-
-enum REQUEST_STATE
-{
-    REQUEST_START = 1,
-    HEADER_END = 2,
-    CONTENT_END = 3,
-};
+#include "Library.hpp"
 
 class RequestParser
 {
@@ -47,6 +28,8 @@ public:
     RequestParser() {};
     ~RequestParser() {};
     size_t checkEnd(std::vector<char> &buf, char *append, size_t size);
+
+
 };
 
 #endif

@@ -10,7 +10,34 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-// #include "../include/Webserv.hpp"
+#include "../include/Webserv.hpp"
+
+void Webserv::isMessageRight(int idx) {
+	for (int j = 0; j < bufferList.size(); j++) {
+		if (bufferList[j].getFd() == eventList[j].ident) {
+			// Message == 1
+			if (bufferList[j].whoAmI() == 1) {}
+
+			// File == 2
+			else if (bufferList[j].whoAmI() == 2) {}
+
+		}
+	}
+}
+
+void Webserv::isMessageLeft(int idx) {
+	for (int j = 0; j < bufferList.size(); j++) {
+		if (bufferList[j].getFd() == eventList[j].ident) {
+			// Message == 1
+			if (bufferList[j].whoAmI() == 1) {}
+
+			// File == 2
+			else if (bufferList[j].whoAmI() == 2) {}
+
+		}
+	}
+}
+
 
 // void Webserv::ioMultiplexing() {
 

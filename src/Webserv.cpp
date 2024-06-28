@@ -80,40 +80,69 @@ bool Webserv::checkSocketError(int idx) {
 	return false;
 }
 
-void Webserv::runServers() {
+
+void Webserv::runServers()
+{
 	struct timespec timeout;
 	timeout.tv_sec = 5;
 	timeout.tv_nsec = 0;
 
 	signal(SIGPIPE, SIG_IGN);
 	int cnt = 0;
-	while (true) {
+	while (true)
+	{
 		// if (cnt == 20)
 		//	 std::exit(0);
 		int nev = kevent(kq, &changeList[0], changeList.size(), eventList, 10, &timeout);
 		std::cout << "NUMBER OF EVENT : " << nev << std::endl;
-		if (nev < 0) {
+		if (nev < 0)
+		{
 			perror("kqueue");
 			throw RuntimeException("kqueue1");
 		}
 		changeList.clear();
-		if (nev == 0) {
+		if (nev == 0)
+		{
 			std::cout << "NO EVENT" << std::endl;
-			continue ;
+			continue;
 		}
-		for (int i=0; i < nev; i++) {
+		for (int i = 0; i < nev; i++)
+		{
+			printf("\n----filter : %d fflags : %d flags : %d ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
 			if (checkSocketError(i))
-				continue ; // error check
-			if (eventList[i].flags & EV_DELETE) {
+				continue; // error check
+			if (eventList[i].flags & EV_DELETE)
+			{
 				std::cout << "check" << std::endl;
-				continue ;
+				continue;
 			}
+			// if (eventList[i].flags & EV_EOF)
+			// {
+			// 	for (int i = 0; i < bufferList.size(); i++) {
+			// 		if (bufferList[i].getFd() == eventList[i].ident) {
+			// 			bufferList.erase(bufferList.begin() + i);
+			// 			break;
+			// 		}
+			// 	}
+			// 	// clients.erase(eventList[i].ident);
+			// 	close(eventList[i].ident);
+			// 	struct kevent client_event;
+			// 	EV_SET(&client_event, eventList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+			// 	changeList.push_back(client_event);
+			// 	std::cout << "EOF" << std::endl;
+			// 	continue;
+			// }
 			int temp = checkNewClient(eventList[i].ident);
-			if (temp > 0) {
+			if (temp > 0)
+			{
 				new_client(eventList[i].ident); // new client
-			} else if (eventList[i].filter == EVFILT_READ) {
+			}
+			else if (eventList[i].filter == EVFILT_READ)
+			{
 				read_event(i);
-			} else if (eventList[i].filter == EVFILT_WRITE) {
+			}
+			else if (eventList[i].filter == EVFILT_WRITE)
+			{
 				write_event(i);
 			}
 		}
@@ -191,8 +220,19 @@ std::string Webserv::make_response() {
 
 void Webserv::read_event(int idx) {
 	std::cout << "****** read event ******" << std::endl;
-	int client_fd = eventList[idx].ident;
-	// std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
+
+	// EOF YES
+	if (eventList[idx].flags & EV_EOF) {
+		isMessageRight(idx);
+		return ;
+	}
+	// EOF NO
+	
+	
+	
+	
+	
+	int client_fd = eventList[idx].ident; 
 	Buffer it(-1);
 	std::vector<Buffer>::iterator iter = bufferList.begin();
 	for (;iter != bufferList.end(); iter++) {
@@ -205,18 +245,9 @@ void Webserv::read_event(int idx) {
 		std::cout << "client not exist in server!!!" << std::endl;
 		return ;
 	}
-	// Buffer it(-1);
-	// for (int i = 0; i < bufferList.size(); i++) {
-	// 	if (bufferList[i].getFd() == client_fd) {
-	// 		it = bufferList[i];
-	// 	}
-	// }
-	// if (it.getFd() == -1) {
-	// 	std::cout << "client not exist in server!!!" << std::endl;
-	// 	return ;
-	// }
 	char buf[BUFFER_SIZE] = {0};
 	int n = read(client_fd, buf, BUFFER_SIZE);
+	// 예외처리
 	if (n == -1)
 	{
 		for (int i = 0; i < bufferList.size(); i++) {
@@ -234,15 +265,7 @@ void Webserv::read_event(int idx) {
 	}
 	it.getBuffer().insert(it.getBuffer().end(), buf, buf + n);
 	std::cout << "buffer size : " << it.getBuffer().size() << std::endl;
-	if (n != BUFFER_SIZE) {
-		std::cout << "++++++++++++++++++++++++" << std::endl;
-		std::cout << "+++++++ read end +++++++" << std::endl;
-		std::cout << "++++++++++++++++++++++++" << std::endl;
-		std::cout << std::endl;
-		struct kevent client_event;
-		EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		changeList.push_back(client_event);
-	}
+
 }
 
 void Webserv::write_event(int idx) {

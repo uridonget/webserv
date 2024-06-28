@@ -41,7 +41,7 @@ class Webserv {
 		void makeServerList();
 		void initKqueue();
 		void connectKqueueToServer();
-		// void ioMultiplexing();
+
 		bool checkSocketError(int idx);
 		void runServers();
 		
@@ -51,6 +51,9 @@ class Webserv {
 		std::string make_response();
 		void read_event(int idx);
 		void write_event(int idx);
+
+		void isMessageRight(int idx);
+		void isMessageLeft(int idx);
 };
 
 #endif

@@ -17,14 +17,14 @@ Buffer::Buffer(int fd) : fd(fd) {}
 Buffer::~Buffer() {}
 
 Buffer::Buffer(const Buffer& other) {
-	this->fd = other.getFd();
-	this->buffer = other.getBuffer();
+	this->fd = other.fd;
+	this->buffer = other.buffer;
 }
 
 Buffer& Buffer::operator = (const Buffer& other) {
 	if (this != &other) {
-	this->fd = other.getFd();
-	this->buffer = other.getBuffer();
+	this->fd = other.fd;
+	this->buffer = other.buffer;
 	}
 	return *this;
 }
@@ -37,6 +37,6 @@ int Buffer::getFd() const {
     return this->fd;
 }
 
-std::vector<char> Buffer::getBuffer() const {
+std::vector<char>& Buffer::getBuffer() {
     return this->buffer;
 }

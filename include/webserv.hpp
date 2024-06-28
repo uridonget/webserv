@@ -19,6 +19,7 @@
 #include "Buffer.hpp"
 #include "Message.hpp"
 #include "File.hpp"
+#include "RequestParser.hpp"
 
 class Webserv {
 	private:
@@ -42,18 +43,23 @@ class Webserv {
 		void initKqueue();
 		void connectKqueueToServer();
 
-		bool checkSocketError(int idx);
+		bool checkSocketError(int idx, int bufferIdx);
 		void runServers();
 		
 		int checkNewClient(uintptr_t enventIdent);
 
 		void new_client(int serverFd);
 		std::string make_response();
-		void read_event(int idx);
-		void write_event(int idx);
+		void read_event(int idx, int bufferIdx);
+		void write_event(int idx, int bufferIdx);
 
-		void isMessageRight(int idx);
-		void isMessageLeft(int idx);
+		// websev utils
+		int isMessage(int bufferIdx);
+		void closeSocket(int bufferIdx);
+		void closeFile(int bufferIdx);
+
 };
+
+void setNonblock(int fd);
 
 #endif

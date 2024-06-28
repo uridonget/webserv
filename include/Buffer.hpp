@@ -30,7 +30,7 @@ class Buffer {
 
 		virtual int whoAmI();
 		int getFd() const;
-		std::vector<char> getBuffer() const;
+		std::vector<char>& getBuffer();
 
 
 };

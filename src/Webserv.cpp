@@ -66,13 +66,13 @@ int Webserv::checkNewClient(uintptr_t eventIdent) {
 	}
 }
 
-bool Webserv::checkSocketError(int idx) {
+bool Webserv::checkSocketError(int idx, int bufferIdx) {
 	if (eventList[idx].flags == EV_ERROR) {
 		if (checkNewClient(eventList[idx].ident)) {
 			throw RuntimeException("Server socket");
 		} else {
 			close(eventList[idx].ident);
-			bufferList.erase(bufferList.begin() + idx);
+			bufferList.erase(bufferList.begin() + bufferIdx);
 			// clients.erase(eventList[idx].ident);
 			return true;
 		}
@@ -97,8 +97,7 @@ void Webserv::runServers()
 		std::cout << "NUMBER OF EVENT : " << nev << std::endl;
 		if (nev < 0)
 		{
-			perror("kqueue");
-			throw RuntimeException("kqueue1");
+			throw RuntimeException("kevent");
 		}
 		changeList.clear();
 		if (nev == 0)
@@ -109,7 +108,15 @@ void Webserv::runServers()
 		for (int i = 0; i < nev; i++)
 		{
 			printf("\n----filter : %d fflags : %d flags : %d ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
-			if (checkSocketError(i))
+
+			int j = 0;
+			for (; j < bufferList.size(); j++) {
+				if (bufferList[j].getFd() == eventList[i].ident) {
+					break;
+				}
+			}
+
+			if (checkSocketError(i, j))
 				continue; // error check
 			if (eventList[i].flags & EV_DELETE)
 			{
@@ -139,11 +146,11 @@ void Webserv::runServers()
 			}
 			else if (eventList[i].filter == EVFILT_READ)
 			{
-				read_event(i);
+				read_event(i, j);
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
 			{
-				write_event(i);
+				write_event(i, j);
 			}
 		}
 	}
@@ -152,14 +159,7 @@ void Webserv::runServers()
 void Webserv::initKqueue() {
 	kq = kqueue();
 	if (kq < 0) {
-		throw RuntimeException("kqueue2");
-	}
-}
-
-static void set_nonblock(int fd) {
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		perror("fcntl(F_SETFL)");
-		std::exit(EXIT_FAILURE);
+		throw RuntimeException("kqueue");
 	}
 }
 
@@ -167,11 +167,9 @@ void Webserv::new_client(int serverFd) {
 	std::cout << "---- new client event ----" << std::endl;
 	int client_fd = accept(serverFd, NULL, NULL);
 	if (client_fd < 0) {
-		std::cout << "serverFd : " << serverFd << std::endl;
-		perror("accept");
-		exit(1);
+		throw RuntimeException("accept");
 	} else {
-		set_nonblock(client_fd);
+		setNonblock(client_fd);
 		struct kevent client_event;
 		EV_SET(&client_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		std::cout << "---- new client added " << client_fd << " ----" << std::endl;
@@ -188,9 +186,6 @@ void Webserv::new_client(int serverFd) {
 		if (iter == bufferList.end()) {
 			throw RuntimeException("client inset fail");
 		}
-		// clients[client_fd] = std::vector<char>();
-		// if (clients.find(client_fd) == clients.end())
-		// 	 exit(1);
 	}
 }
 
@@ -218,57 +213,74 @@ std::string Webserv::make_response() {
 	return (response);
 }
 
-void Webserv::read_event(int idx) {
+void Webserv::read_event(int idx, int bufferIdx) {
 	std::cout << "****** read event ******" << std::endl;
 
 	// EOF YES
 	if (eventList[idx].flags & EV_EOF) {
-		isMessageRight(idx);
-		return ;
-	}
-	// EOF NO
-	
-	
-	
-	
-	
-	int client_fd = eventList[idx].ident; 
-	Buffer it(-1);
-	std::vector<Buffer>::iterator iter = bufferList.begin();
-	for (;iter != bufferList.end(); iter++) {
-		if ((*iter).getFd() == client_fd) {
-			it = *iter;
-			break;
+
+		// Message == 1
+		if (isMessage(bufferIdx) == 1) {
+
+			// 소켓이 닫혔다는 거임 그거 버려야함
+			closeSocket(bufferIdx);
+			return ;
+		}
+
+		// File == 2
+		else if (isMessage(bufferIdx) == 2) {
+
+			// 여기는 파일 다 읽어서 클라이언트로 보낸다는거임
+			close(bufferIdx);
+
+			return ;
 		}
 	}
-	if (iter == bufferList.end()) {
-		std::cout << "client not exist in server!!!" << std::endl;
-		return ;
-	}
+
+	// EOF NO
+	int client_fd = eventList[idx].ident; 
+
 	char buf[BUFFER_SIZE] = {0};
 	int n = read(client_fd, buf, BUFFER_SIZE);
 	// 예외처리
 	if (n == -1)
 	{
-		for (int i = 0; i < bufferList.size(); i++) {
-			if (bufferList[i].getFd() == client_fd) {
-				bufferList.erase(bufferList.begin() + i);
-				break;
-			}
-		}
-		// clients.erase(client_fd);
+		bufferList.erase(bufferList.begin() + bufferIdx);
 		close(client_fd);
 		struct kevent client_event;
 		EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 		changeList.push_back(client_event);
 		return ;
 	}
-	it.getBuffer().insert(it.getBuffer().end(), buf, buf + n);
-	std::cout << "buffer size : " << it.getBuffer().size() << std::endl;
+
+	// File == 2
+	if (isMessage(bufferIdx) == 2) {
+		// 파일을 덜 읽었다는 뜻임
+		return ;
+	}
+
+	// Message == 1
+	// 여기서 쭉쭉 내려가면 됨
+
+
+	RequestParser parser;
+
+    std::cout << "buffer size : " << bufferList[bufferIdx].getBuffer().size() << std::endl;
+    if (parser.checkEnd(bufferList[bufferIdx].getBuffer(), buf, n) != RequestParser::npos)
+    {
+        std::cout << "++++++++++++++++++++++++" << std::endl;
+        std::cout << "+++++++ read end +++++++" << std::endl;
+        std::cout << "++++++++++++++++++++++++" << std::endl;
+        std::cout << std::endl;
+        struct kevent client_event;
+        EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+        changeList.push_back(client_event);
+
+    }
 
 }
 
-void Webserv::write_event(int idx) {
+void Webserv::write_event(int idx, int bufferIdx) {
 	// if (eventList[idx].flags == EV_DELETE) {
 	//	 // close(eventList[idx].ident);
 	//	 // clients.erase(eventList[idx].ident);
@@ -277,61 +289,43 @@ void Webserv::write_event(int idx) {
 	//	 return ;
 	// }
 	std::cout << "****** write event ******" << std::endl;
-	int client_fd = eventList[idx].ident;
-	// std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
-	// if (it == clients.end()) {
-	//	 std::cout << "clinet not exist in server!!!" << std::endl;
-	//	 return ;
+
+
+	int clientFd = eventList[idx].ident;
+	std::cout << "HTTP REQUEST" << std::endl;
+	std::cout << bufferList[bufferIdx].getBuffer().size() << std::endl;
+	// for (int i=0; i < bufferList[bufferIdx].getBuffer().size(); i++) {
+	// 	std::cout << bufferList[bufferIdx].getBuffer()[i];
 	// }
-	// Buffer it(-1);
-	// for (int i = 0; i < bufferList.size(); i++) {
-	// 	if (bufferList[i].getFd() == client_fd) {
-	// 		it = bufferList[i];
-	// 	}
-	// }
-	// if (it.getFd() == -1) {
-	// 	std::cout << "client not exist in server!!!" << std::endl;
-	// 	return ;
-	// }
-	Buffer it(-1);
-	std::vector<Buffer>::iterator iter = bufferList.begin();
-	for (;iter != bufferList.end(); iter++) {
-		if ((*iter).getFd() == client_fd) {
-			it = *iter;
-			break;
-		}
-	}
-	if (iter == bufferList.end()) {
-		std::cout << "client not exist in server!!!" << std::endl;
+
+	// Message == 1
+	if (isMessage(bufferIdx) == 1) {
+
+		// 여기 뭔지 모르겠음;;
+		// struct kevent clientEvent;
+		// EV_SET(&clientEvent, clientFd, EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
+		// changeList.push_back(clientEvent);
 		return ;
 	}
-	std::cout << "HTTP REQUEST" << std::endl;
-	std::cout << it.getBuffer().size() << std::endl;
-	for (int i=0; i < it.getBuffer().size(); i++) {
-		std::cout << it.getBuffer()[i];
-	}
+
+	// File == 2
+
 	std::string response = make_response();
-	int n = write(client_fd, response.c_str(), response.length());
+	int n = write(clientFd, response.c_str(), response.length());
 	if (n == -1)
 	{
-		// clients.erase(client_fd);
-		for (std::vector<Buffer>::iterator iter = bufferList.begin(); iter != bufferList.end(); iter++) {
-			if ((*iter).getFd() == client_fd) {
-				bufferList.erase(iter);
-				break;
-			}
-		}
-		close(client_fd);
+		bufferList.erase(bufferList.begin() + bufferIdx);
+		close(clientFd);
 		struct kevent client_event;
 		// struct kevent client_event2;
-		// EV_SET(&client_event2, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+		// EV_SET(&client_event2, clientFd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		EV_SET(&client_event, clientFd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
 		changeList.push_back(client_event);
 		// changeList.push_back(client_event2);
 		return ;
 	}
 	struct kevent client_event1;
-	EV_SET(&client_event1, client_fd, EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
+	EV_SET(&client_event1, clientFd, EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
 	changeList.push_back(client_event1);
 }
 

@@ -14,6 +14,7 @@
 # define SERVER_HPP
 
 #include "ServerConfig.hpp"
+#include "Webserv.hpp"
 
 class Server {
 	private:
@@ -30,7 +31,6 @@ class Server {
 		size_t getListen();
 		int getServerFd();
 
-		void set_nonblock(int fd);
 };
 
 #endif

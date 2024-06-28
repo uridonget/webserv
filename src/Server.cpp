@@ -20,51 +20,40 @@ Server::~Server() {
 	// std::cout << "Server destructor called" << std::endl;
 }
 
-void Server::set_nonblock(int fd) {
-    if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-        perror("fcntl(F_SETFL)");
-        std::exit(EXIT_FAILURE);
-    }
-}
-
 void Server::initServer(ServerConfig & config) {
 	this->config = config;
 	serverFd = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverFd < 0) {
-        perror("socket");
-        std::exit(EXIT_FAILURE);
-    }
+		throw RuntimeException("socket");
+	}
 
-    set_nonblock(serverFd);
-    
+	setNonblock(serverFd);
+		
 	int opt = 1;
-    if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-    {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-    
+	if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+	{
+		throw RuntimeException("setsockopt");
+	}
+		
 	serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(this->getListen());
+	serverAddr.sin_addr.s_addr = INADDR_ANY;
+	serverAddr.sin_port = htons(this->getListen());
 
-    std::cout << "PORT : " << this->getListen() << std::endl;
-    
+	std::cout << "PORT : " << this->getListen() << std::endl;
+		
 	if (bind(serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
-        perror("bind");
-        std::exit(EXIT_FAILURE);
-    }
-    
-    if (listen(serverFd, 10) < 0) {
-        perror("listen");
-        std::exit(EXIT_FAILURE);
-    }
+		throw RuntimeException("bind");
+	}
+		
+	if (listen(serverFd, 10) < 0) {
+		throw RuntimeException("listen");
+	}
 }
 
 size_t Server::getListen() {
-    return (config.getListen());
+	return (config.getListen());
 }
 
 int Server::getServerFd() {
-    return (serverFd);
+	return (serverFd);
 }

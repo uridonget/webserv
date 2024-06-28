@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:10:04 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/28 13:46:26 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 15:37:26 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ public:
     RequestParser() {};
     ~RequestParser() {};
     size_t checkEnd(std::vector<char> &buf, char *append, size_t size);
-    struct HttpRequest requestParsing(std::vector<char> fullRequest, size_t endIndex);
+    struct HttpRequest requestParsing(std::vector<char> fullRequest, size_t endIndex, size_t & endHeader);
 };
 
 #endif

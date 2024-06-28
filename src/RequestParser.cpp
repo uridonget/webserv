@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/28 15:07:51 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 15:38:04 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,14 +80,13 @@ size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
     }
 }
 
-size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size)
+size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size, size_t & endHeader)
 {
     size_t pos = findEnd(buf, append, size);
     if (pos != RequestParser::npos)
     {
         std::string content_header = "Content-Length:";
         size_t content_len_pos = kmp(buf, content_header, 0);
-        std::cout << "!!!!!!!!!!!!!!!!!!!" << std::endl;
         std::cout << content_len_pos << std::endl;
         if (content_len_pos == RequestParser::npos)
         {
@@ -109,7 +108,6 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
                 temp += buf[k];
             }
             int content_len = std::atoi(temp.c_str());
-            std::cout << "content-length is :" << content_len << std::endl;
             if (content_len >= 0 && pos + 4 + content_len >= buf.size())
             {
                 // message done

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 14:59:49 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 15:38:10 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -261,7 +261,8 @@ void Webserv::read_event(int idx)
         return;
     }
     RequestParser parser;
-    size_t endIndex = parser.checkEnd(it->second,buf,n);
+    size_t endHeader;
+    size_t endIndex = parser.checkEnd(it->second, buf, n, endHeader);
     std::cout << endIndex << std::endl;
     if (endIndex != RequestParser::npos)
     {
@@ -269,7 +270,9 @@ void Webserv::read_event(int idx)
         std::cout << "+++++++ read end +++++++" << std::endl;
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::string str(it->second.begin(), it->second.end());
+        std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << str << std::endl;
+        std::cout << "++++++++++++++++++++++++" << std::endl;
         HttpRequest request = parser.requestParsing(it->second, endIndex);
         showRequest(request);
         std::cout << std::endl;

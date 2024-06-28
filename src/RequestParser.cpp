@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/28 11:46:06 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 14:01:22 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,3 +122,53 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
     return (RequestParser::npos);
 }
 
+struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, size_t endIndex) {
+    struct HttpRequest parsedRequest;
+    
+    std::string request(fullRequest.begin(), fullRequest.begin() + endIndex + 1);
+    
+    std::istringstream iss(request);
+    std::string line;
+    std::vector<std::string> tokens;
+    std::string temp;
+
+    std::getline(iss, line);
+    tokens.clear();
+    std::istringstream lineStream(line);
+    while (lineStream >> temp) {
+        tokens.push_back(temp);
+    }
+    if (tokens.size() != 3) {
+        throw RuntimeException("invalid http request header1");
+    }
+    parsedRequest.method = tokens[0];
+    parsedRequest.url = tokens[1];
+    parsedRequest.httpVersion = tokens[2];
+    while (std::getline(iss, line)) {
+        tokens.clear();
+        std::istringstream lineStream(line);
+        while (lineStream >> temp) {
+            tokens.push_back(temp);
+        }
+        if (tokens[0] == "Host:") {
+            if (tokens.size() != 2)
+                throw RuntimeException("invalid http request header2");
+            parsedRequest.host = tokens[1];
+        }
+        else if (tokens[0] == "User-Agent:") {
+            std::string agent = "";
+            for (int i=1; i < tokens.size(); i++) {
+                agent += tokens[i];
+                agent += ' ';
+            }
+            parsedRequest.userAgent = agent;
+        }
+        else if (tokens[0] == "Accept:") {
+            if (tokens.size() != 2) {
+                throw RuntimeException("invalid http request header4");
+            }
+            parsedRequest.accept = tokens[1];
+        }
+    }
+    return parsedRequest;
+}

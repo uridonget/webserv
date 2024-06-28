@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 11:48:01 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 13:38:14 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,10 +51,21 @@ enum REQUEST_STATE
     CONTENT_END = 3,
 };
 
-struct request {
-    enum METHOD method;
+struct HttpRequest {
+    std::string method; // 일단 string으로 저장할 것. 나중에 enum METHOD로 바꾸는 일이 있을수도?
+    std::string url;
     std::string httpVersion;
-    
+    std::string host;
+    std::string userAgent;
+    std::string accept;
+
+    HttpRequest()
+        : method(""), 
+        url(""), 
+        httpVersion(""), 
+        host(""), 
+        userAgent(""), 
+        accept("") {}
 };
 
 class RuntimeException : public std::runtime_error {

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 17:06:28 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 14:24:15 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,7 @@ void Webserv::runServers()
         }
         for (int i = 0; i < nev; i++)
         {
-            printf("\n----filter : %d fflags : %d flags : %d ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
+            // printf("\n----filter : %d fflags : %d flags : %d ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
             if (checkSocketError(i))
                 continue; // error check
             if (eventList[i].flags & EV_DELETE)
@@ -225,6 +225,15 @@ std::string Webserv::make_response()
 
 #include "../include/RequestParser.hpp"
 
+void showRequest(HttpRequest &request) {
+    std::cout << "Method: " << request.method << std::endl;
+    std::cout << "URL: " << request.url << std::endl;
+    std::cout << "HTTP Version: " << request.httpVersion << std::endl;
+    std::cout << "Host: " << request.host << std::endl;
+    std::cout << "User-Agent: " << request.userAgent << std::endl;
+    std::cout << "Accept: " << request.accept << std::endl;
+}
+
 void Webserv::read_event(int idx)
 {
     std::cout << "****** read event ******" << std::endl;
@@ -251,11 +260,14 @@ void Webserv::read_event(int idx)
     RequestParser parser;
     //it->second.insert(it->second.end(), buf, buf + n);
     std::cout << "buffer size : " << it->second.size() << std::endl;
-    if (parser.checkEnd(it->second,buf,n) != RequestParser::npos)
+    size_t endIndex = parser.checkEnd(it->second,buf,n);
+    if (endIndex != RequestParser::npos)
     {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << "+++++++ read end +++++++" << std::endl;
         std::cout << "++++++++++++++++++++++++" << std::endl;
+        HttpRequest request = parser.requestParsing(it->second, endIndex);
+        showRequest(request);
         std::cout << std::endl;
         struct kevent client_event;
         EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -265,13 +277,6 @@ void Webserv::read_event(int idx)
 
 void Webserv::write_event(int idx)
 {
-    // if (eventList[idx].flags == EV_DELETE) {
-    //     // close(eventList[idx].ident);
-    //     // clients.erase(eventList[idx].ident);
-    //     // serverFdSet.erase(eventList[idx].ident);
-    //     std::cout << "여기입니다!" << std::endl;
-    //     return ;
-    // }
     std::cout << "****** write event ******" << std::endl;
     int client_fd = eventList[idx].ident;
     std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
@@ -293,11 +298,8 @@ void Webserv::write_event(int idx)
         clients.erase(client_fd);
         close(client_fd);
         struct kevent client_event;
-        // struct kevent client_event2;
-        // EV_SET(&client_event2, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
         EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
         changeList.push_back(client_event);
-        // changeList.push_back(client_event2);
         return;
     }
     it->second.clear();

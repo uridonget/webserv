@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 16:26:05 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/06/28 18:44:22 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 #include "Message.hpp"
 #include "File.hpp"
 #include "RequestParser.hpp"
+
+class Server;
 
 class Webserv {
 	private:

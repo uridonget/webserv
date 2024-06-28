@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:31:23 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 11:28:51 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 13:34:49 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,6 @@ void ServerConfig::parseConfig(const std::string& configString) {
     std::string line;
     std::vector<std::string> tokens;
     std::string temp;
-    int cnt;
     bool inLocationBlock = false;
     Location currentLocation;
 

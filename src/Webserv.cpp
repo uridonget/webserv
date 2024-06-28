@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 17:06:28 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 18:42:36 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,27 +87,61 @@ void Webserv::runServers()
 	timeout.tv_sec = 5;
 	timeout.tv_nsec = 0;
 
-	signal(SIGPIPE, SIG_IGN);
-	int cnt = 0;
-	while (true)
-	{
-		// if (cnt == 20)
-		//	 std::exit(0);
-		int nev = kevent(kq, &changeList[0], changeList.size(), eventList, 10, &timeout);
-		std::cout << "NUMBER OF EVENT : " << nev << std::endl;
-		if (nev < 0)
-		{
-			throw RuntimeException("kevent");
-		}
-		changeList.clear();
-		if (nev == 0)
-		{
-			std::cout << "NO EVENT" << std::endl;
-			continue;
-		}
-		for (int i = 0; i < nev; i++)
-		{
-			printf("\n----filter : %d fflags : %d flags : %d ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
+    signal(SIGPIPE, SIG_IGN);
+    int cnt = 0;
+    while (true)
+    {
+        // if (cnt == 20)
+        //     std::exit(0);
+        int nev = kevent(kq, &changeList[0], changeList.size(), eventList, 10, &timeout);
+        std::cout << "NUMBER OF EVENT : " << nev << std::endl;
+        if (nev < 0)
+        {
+            perror("kqueue");
+            throw RuntimeException("kqueue1");
+        }
+        changeList.clear();
+        if (nev == 0)
+        {
+            std::cout << "NO EVENT" << std::endl;
+            continue;
+        }
+        for (int i = 0; i < nev; i++)
+        {
+            // printf("\n----filter : %d fflags : %d flags : %d ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
+            if (checkSocketError(i))
+                continue; // error check
+            if (eventList[i].flags & EV_DELETE)
+            {
+                std::cout << "check" << std::endl;
+                continue;
+            }
+            if (eventList[i].flags & EV_EOF)
+            {
+                clients.erase(eventList[i].ident);
+                close(eventList[i].ident);
+                struct kevent client_event;
+                EV_SET(&client_event, eventList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+                changeList.push_back(client_event);
+                std::cout << "EOF" << std::endl;
+                continue;
+            }
+            int temp = checkNewClient(eventList[i].ident);
+            if (temp > 0)
+            {
+                new_client(eventList[i].ident); // new client
+            }
+            else if (eventList[i].filter == EVFILT_READ)
+            {
+                read_event(i);
+            }
+            else if (eventList[i].filter == EVFILT_WRITE)
+            {
+                write_event(i);
+            }
+        }
+    }
+}
 
 			int j = 0;
 			for (; j < bufferList.size(); j++) {
@@ -193,84 +227,88 @@ std::string Webserv::make_response() {
 	std::string response;
 	std::string content;
 
-	std::ifstream file("./html/index.html", std::ios::in | std::ios::binary);
-	if (file) {
-		std::ostringstream file_buffer;
-		file_buffer << file.rdbuf();
-		content = file_buffer.str();
+    std::ifstream file("./html/index2.html", std::ios::in | std::ios::binary);
+    if (file)
+    {
+        std::ostringstream file_buffer;
+        file_buffer << file.rdbuf();
+        content = file_buffer.str();
 
-		response = "HTTP/1.1 200 OK\r\n";
-		response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
-		response += "Content-Type: text/html\r\n\r\n";
-		response += content;
-	} else {
-		content = "<h1>404 Not Found</h1>";
-		response = "HTTP/1.1 404 Not Found\r\n";
-		response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
-		response += "Content-Type: text/html\r\n\r\n";
-		response += content;
-	}
-	return (response);
+        response = "HTTP/1.1 200 OK\r\n";
+        response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+        response += "Content-Type: text/html\r\n\r\n";
+        response += content;
+    }
+    else
+    {
+        content = "<h1>404 Not Found</h1>";
+        response = "HTTP/1.1 404 Not Found\r\n";
+        response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+        response += "Content-Type: text/html\r\n\r\n";
+        response += content;
+    }
+    return (response);
 }
 
 void Webserv::read_event(int idx, int bufferIdx) {
 	std::cout << "****** read event ******" << std::endl;
 
-	// EOF YES
-	if (eventList[idx].flags & EV_EOF) {
+void showRequest(HttpRequest &request) {
+    std::cout << "Method: " << request.method << std::endl;
+    std::cout << "URL: " << request.url << std::endl;
+    std::cout << "HTTP Version: " << request.httpVersion << std::endl;
+    std::cout << "Host: " << request.host << std::endl;
+    std::cout << "User-Agent: " << request.userAgent << std::endl;
+    std::cout << "Accept: " << request.accept << std::endl;
+    if (request.contentLength.size()) {
+        std::cout << "Content-Length: " << request.contentLength << std::endl;
+        std::cout << std::endl;
+        for (std::vector<char >::iterator it = request.body.begin(); it != request.body.end(); it++) {
+            std::cout << *it;
+        }
+        std::cout << std::endl;
+    }
+}
 
-		// Message == 1
-		if (isMessage(bufferIdx) == 1) {
-
-			// 소켓이 닫혔다는 거임 그거 버려야함
-			closeSocket(bufferIdx);
-			return ;
-		}
-
-		// File == 2
-		else if (isMessage(bufferIdx) == 2) {
-
-			// 여기는 파일 다 읽어서 클라이언트로 보낸다는거임
-			close(bufferIdx);
-
-			return ;
-		}
-	}
-
-	// EOF NO
-	int client_fd = eventList[idx].ident; 
-
-	char buf[BUFFER_SIZE] = {0};
-	int n = read(client_fd, buf, BUFFER_SIZE);
-	// 예외처리
-	if (n == -1)
-	{
-		bufferList.erase(bufferList.begin() + bufferIdx);
-		close(client_fd);
-		struct kevent client_event;
-		EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		changeList.push_back(client_event);
-		return ;
-	}
-
-	// File == 2
-	if (isMessage(bufferIdx) == 2) {
-		// 파일을 덜 읽었다는 뜻임
-		return ;
-	}
-
-	// Message == 1
-	// 여기서 쭉쭉 내려가면 됨
-
-
-	RequestParser parser;
-
-    std::cout << "buffer size : " << bufferList[bufferIdx].getBuffer().size() << std::endl;
-    if (parser.checkEnd(bufferList[bufferIdx].getBuffer(), buf, n) != RequestParser::npos)
+void Webserv::read_event(int idx)
+{
+    std::cout << "****** read event ******" << std::endl;
+    if (eventList[idx].flags & EV_DELETE)
+        std::cout << "hoxy?" << std::endl;
+    int client_fd = eventList[idx].ident;
+    std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
+    if (it == clients.end())
+    {
+        std::cout << "client not exist in server!!!" << std::endl;
+        return;
+    }
+    char buf[BUFFER_SIZE] = {0};
+    int n = read(client_fd, buf, BUFFER_SIZE);
+    if (n == -1)
+    {
+        clients.erase(client_fd);
+        close(client_fd);
+        struct kevent client_event;
+        EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+        changeList.push_back(client_event);
+        return;
+    }
+    RequestParser parser;
+    size_t endHeader;
+    size_t endIndex = parser.checkEnd(it->second, buf, n, endHeader);
+    // std::cout << "end header : " << endHeader << std::endl;
+    // std::cout << "end index : " << endIndex << std::endl;
+    if (endIndex != RequestParser::npos)
     {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << "+++++++ read end +++++++" << std::endl;
         std::cout << "++++++++++++++++++++++++" << std::endl;
+        std::string str(it->second.begin(), it->second.end());
+        std::cout << "++++++++++++++++++++++++" << std::endl;
+        std::cout << str << std::endl;
+        std::cout << "++++++++++++++++++++++++" << std::endl;
+        HttpRequest request = parser.requestParsing(it->second, endIndex, endHeader);
+        showRequest(request);
         std::cout << std::endl;
         struct kevent client_event;
         EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -280,53 +318,31 @@ void Webserv::read_event(int idx, int bufferIdx) {
 
 }
 
-void Webserv::write_event(int idx, int bufferIdx) {
-	// if (eventList[idx].flags == EV_DELETE) {
-	//	 // close(eventList[idx].ident);
-	//	 // clients.erase(eventList[idx].ident);
-	//	 // serverFdSet.erase(eventList[idx].ident);
-	//	 std::cout << "여기입니다!" << std::endl;
-	//	 return ;
-	// }
-	std::cout << "****** write event ******" << std::endl;
-
-
-	int clientFd = eventList[idx].ident;
-	std::cout << "HTTP REQUEST" << std::endl;
-	std::cout << bufferList[bufferIdx].getBuffer().size() << std::endl;
-	// for (int i=0; i < bufferList[bufferIdx].getBuffer().size(); i++) {
-	// 	std::cout << bufferList[bufferIdx].getBuffer()[i];
-	// }
-
-	// Message == 1
-	if (isMessage(bufferIdx) == 1) {
-
-		// 여기 뭔지 모르겠음;;
-		// struct kevent clientEvent;
-		// EV_SET(&clientEvent, clientFd, EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
-		// changeList.push_back(clientEvent);
-		return ;
-	}
-
-	// File == 2
-
-	std::string response = make_response();
-	int n = write(clientFd, response.c_str(), response.length());
-	if (n == -1)
-	{
-		bufferList.erase(bufferList.begin() + bufferIdx);
-		close(clientFd);
-		struct kevent client_event;
-		// struct kevent client_event2;
-		// EV_SET(&client_event2, clientFd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		EV_SET(&client_event, clientFd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-		changeList.push_back(client_event);
-		// changeList.push_back(client_event2);
-		return ;
-	}
-	struct kevent client_event1;
-	EV_SET(&client_event1, clientFd, EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
-	changeList.push_back(client_event1);
+void Webserv::write_event(int idx)
+{
+    std::cout << "****** write event ******" << std::endl;
+    int client_fd = eventList[idx].ident;
+    std::map<int, std::vector<char> >::iterator it = clients.find(client_fd);
+    if (it == clients.end())
+    {
+        std::cout << "client not exist in server!!!" << std::endl;
+        return;
+    }
+    std::string response = make_response();
+    int n = write(client_fd, response.c_str(), response.length());
+    if (n == -1)
+    {
+        clients.erase(client_fd);
+        close(client_fd);
+        struct kevent client_event;
+        EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+        changeList.push_back(client_event);
+        return;
+    }
+    it->second.clear();
+    struct kevent client_event1;
+    EV_SET(&client_event1, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    changeList.push_back(client_event1);
 }
 
 void Webserv::connectKqueueToServer() {

@@ -6,12 +6,12 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 10:56:25 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 16:39:54 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef INCLUDES_HPP
-# define INCLUDES_HPP
+#ifndef LIBRARY_HPP
+# define LIBRARY_HPP
 
 #include <iostream>
 #include <cstring>
@@ -49,6 +49,26 @@ enum REQUEST_STATE
     REQUEST_START = 1,
     HEADER_END = 2,
     CONTENT_END = 3,
+};
+
+struct HttpRequest {
+    std::string method; // 일단 string으로 저장할 것. 나중에 enum METHOD로 바꾸는 일이 있을수도?
+    std::string url;
+    std::string httpVersion;
+    std::string host;
+    std::string userAgent;
+    std::string accept;
+    std::string contentLength;
+    std::vector<char> body;
+
+    HttpRequest()
+        : method(""), 
+        url(""), 
+        httpVersion(""), 
+        host(""), 
+        userAgent(""), 
+        accept(""),
+        contentLength("") {}
 };
 
 class RuntimeException : public std::runtime_error {

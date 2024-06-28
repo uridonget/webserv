@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/06/27 17:04:04 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 16:42:16 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,17 +80,13 @@ size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
     }
 }
 
-enum METHOD RequestParser::checkMethod()
-{
-    return GET;
-}
-
-size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size)
+size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size, size_t & endHeader)
 {
     size_t pos = findEnd(buf, append, size);
+    endHeader = pos;
     if (pos != RequestParser::npos)
     {
-        std::string content_header("content-length:");
+        std::string content_header = "Content-Length:";
         size_t content_len_pos = kmp(buf, content_header, 0);
         if (content_len_pos == RequestParser::npos)
         {
@@ -107,14 +103,15 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
                 content_len_tail++;
             }
             std::string temp;
-            for (int k = 0; k < content_len_tail - content_len_pos; k++)
+            for (int k = content_len_pos + content_header.size(); k < content_len_tail; k++)
             {
-                temp += buf[content_len_pos + k];
+                temp += buf[k];
             }
             int content_len = std::atoi(temp.c_str());
-            if (content_len >= 0 && pos + 1 + content_len >= buf.size())
+            if (content_len >= 0 && pos + 4 + content_len >= buf.size())
             {
                 // message done
+                
                 return (pos + content_len);
             }
             else
@@ -124,5 +121,68 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
             }
         }
     }
+    // header not done
     return (RequestParser::npos);
+}
+
+struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, size_t endIndex, size_t & endHeader) {
+    struct HttpRequest parsedRequest;
+    
+    std::string request(fullRequest.begin(), fullRequest.begin() + endIndex + 1);
+    
+    std::istringstream iss(request);
+    std::string line;
+    std::vector<std::string> tokens;
+    std::string temp;
+
+    std::getline(iss, line);
+    tokens.clear();
+    std::istringstream lineStream(line);
+    while (lineStream >> temp) {
+        tokens.push_back(temp);
+    }
+    if (tokens.size() != 3) {
+        throw RuntimeException("invalid http request header1");
+    }
+    parsedRequest.method = tokens[0];
+    parsedRequest.url = tokens[1];
+    parsedRequest.httpVersion = tokens[2];
+    while (std::getline(iss, line)) {
+        tokens.clear();
+        std::istringstream lineStream(line);
+        while (lineStream >> temp) {
+            tokens.push_back(temp);
+        }
+        if (tokens[0] == "Host:") {
+            if (tokens.size() != 2)
+                throw RuntimeException("invalid http request header2");
+            parsedRequest.host = tokens[1];
+        }
+        else if (tokens[0] == "User-Agent:") {
+            std::string agent = "";
+            for (int i=1; i < tokens.size(); i++) {
+                agent += tokens[i];
+                agent += ' ';
+            }
+            parsedRequest.userAgent = agent;
+        }
+        else if (tokens[0] == "Accept:") {
+            if (tokens.size() != 2) {
+                throw RuntimeException("invalid http request header4");
+            }
+            parsedRequest.accept = tokens[1];
+        }
+        else if (tokens[0] == "Content-Length:") {
+            if (tokens.size() != 2) {
+                throw RuntimeException("invalid http request header4");
+            }
+            parsedRequest.contentLength = tokens[1];
+        }
+        else if (line.length() == 0) 
+            break ;
+    }
+    for (int i=0; endHeader + i < endIndex; i++) {
+        parsedRequest.body.push_back(request[i]);
+    }
+    return parsedRequest;
 }

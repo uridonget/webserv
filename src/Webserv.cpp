@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 16:46:10 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/06/28 18:18:29 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,7 +200,7 @@ std::string Webserv::make_response()
     std::string response;
     std::string content;
 
-    std::ifstream file("./html/index.html", std::ios::in | std::ios::binary);
+    std::ifstream file("./html/index2.html", std::ios::in | std::ios::binary);
     if (file)
     {
         std::ostringstream file_buffer;
@@ -268,8 +268,8 @@ void Webserv::read_event(int idx)
     RequestParser parser;
     size_t endHeader;
     size_t endIndex = parser.checkEnd(it->second, buf, n, endHeader);
-    std::cout << "end header : " << endHeader << std::endl;
-    std::cout << "end index : " << endIndex << std::endl;
+    // std::cout << "end header : " << endHeader << std::endl;
+    // std::cout << "end index : " << endIndex << std::endl;
     if (endIndex != RequestParser::npos)
     {
         std::cout << "++++++++++++++++++++++++" << std::endl;

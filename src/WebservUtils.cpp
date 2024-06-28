@@ -28,6 +28,9 @@ void Webserv::closeSocket(int bufferIdx) {
 	struct kevent clientEvent;
 	EV_SET(&clientEvent, bufferList[bufferIdx].getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	changeList.push_back(clientEvent);
+	struct kevent clientEvent1;
+	EV_SET(&clientEvent1, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+	changeList.push_back(clientEvent1);
 	close(bufferList[bufferIdx].getFd());
 	bufferList.erase(bufferList.begin() + bufferIdx);
 }

@@ -102,10 +102,6 @@ void ConfigParsing::splitServer(std::string & fileInput) {
 	}
 }
 
-// std::vector<std::string> ConfigParsing::getConfigStrings() const {
-// 	return (this->configStrings);
-// }
-
 void ConfigParsing::setServerConfig() {
 	for (std::vector<std::string>::iterator it = configStrings.begin(); it != configStrings.end(); it++) {
 		ServerConfig config;

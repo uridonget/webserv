@@ -28,7 +28,6 @@ int main(int ac, char *av[]) {
 
         webserv.runServers();
         
-        // 이제 시작이야!
         
     } catch (const RuntimeException& e) {
         std::cout << "Error : " << e.what() << std::endl;

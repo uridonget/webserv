@@ -27,7 +27,6 @@ class Webserv {
 	private:
 		ConfigParsing						configParsing;
 		std::map<int, Server> 				serverList; // <port, Server>
-		// std::map<int, std::vector<char> > 	clients; // I/OMultiplexing으로 변경할 예정
 		std::set<int> serverFdSet;
 		int kq;
 		std::vector<struct kevent> changeList;
@@ -51,9 +50,9 @@ class Webserv {
 		int checkNewClient(uintptr_t enventIdent);
 
 		void new_client(int serverFd);
-		std::string make_response();
-		void read_event(int idx, int bufferIdx);
-		void write_event(int idx, int bufferIdx);
+		std::string makeResponse();
+		void readEvent(int idx, int bufferIdx);
+		void writeEvent(int idx, int bufferIdx);
 
 		// websev utils
 		int isMessage(int bufferIdx);

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 15:32:32 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/01 15:46:43 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,8 @@ class Webserv {
 
 		void new_client(int serverFd);
 		std::string makeResponse();
-		void readEvent(int idx, int bufferIdx);
-		void writeEvent(int idx, int bufferIdx);
+		void readEvent(int idx, int bufferIdx, int serverFd);
+		void writeEvent(int idx, int bufferIdx, int serverFd);
 
 		// websev utils
 		int isMessage(int bufferIdx);

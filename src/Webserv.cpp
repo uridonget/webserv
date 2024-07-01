@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 15:39:59 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/01 15:55:36 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,13 +151,15 @@ void Webserv::runServers()
 			}
 			else if (eventList[i].filter == EVFILT_READ)
 			{
-				int serverPort = serverFdSet.find(eventList[i].ident)->second;
-				std::cout << "----- server port : " << serverPort << " -----" << std::endl;
-				readEvent(i, j); // 여기에 server_fd를 넣어줘야하는데 구할 방법이?
+				int serverFd = serverFdSet.find(eventList[i].ident)->second;
+				std::cout << "----- server port : " << serverFd << " -----" << std::endl;
+				readEvent(i, j, serverFd); // 여기에 server_fd를 넣어줘야하는데 구할 방법이?
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
 			{
-				writeEvent(i, j);
+				int serverFd = serverFdSet.find(eventList[i].ident)->second;
+				std::cout << "----- server port : " << serverFd << " -----" << std::endl;
+				writeEvent(i, j, serverFd);
 			}
 		}
 	}
@@ -221,7 +223,7 @@ std::string Webserv::makeResponse() {
 	return (response);
 }
 
-void Webserv::readEvent(int idx, int bufferIdx) {
+void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 	// std::cout << "****** read event ******" << std::endl;
 
 	// EOF YES
@@ -283,10 +285,13 @@ void Webserv::readEvent(int idx, int bufferIdx) {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << std::endl;
 
-		HttpRequest request = parser.requestParsing(bufferList[bufferIdx].getBuffer(), endIndex, endHeader);
-		parser.printRequest(request);
+		Buffer buffer = bufferList[bufferIdx];
+		HttpRequest request = parser.requestParsing(buffer.getBuffer(), endIndex, endHeader);
+		// parser.printRequest(request);
 
-        bufferList[bufferIdx].getBuffer().clear();
+		serverList[serverFd].makeResponse(request, buffer);
+
+        buffer.getBuffer().clear();
 		
 		struct kevent client_event;
 
@@ -297,7 +302,7 @@ void Webserv::readEvent(int idx, int bufferIdx) {
 
 }
 
-void Webserv::writeEvent(int idx, int bufferIdx) {
+void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 	// std::cout << "****** write event ******" << std::endl;
 
 

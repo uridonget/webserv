@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 18:44:22 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/01 15:32:32 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,14 +25,14 @@ class Server;
 
 class Webserv {
 	private:
-		ConfigParsing						configParsing;
+		ConfigParsing						configParsing; // configuration file parsing
 		std::map<int, Server> 				serverList; // <port, Server>
-		std::set<int> serverFdSet;
+		// std::set<int> serverFdSet;
+		std::map<int, int> serverFdSet; // <Client fd, Server fd> serverFdMap
 		int kq;
 		std::vector<struct kevent> changeList;
 		struct kevent eventList[10];
 		std::vector<Buffer> bufferList;
-
 
 	public:
 		Webserv();

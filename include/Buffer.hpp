@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Buffer.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:27:05 by heolee            #+#    #+#             */
-/*   Updated: 2024/06/28 19:46:12 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/01 15:16:20 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 class Buffer {
 
 	protected:
-		int fd;
+		int fd; // client fd
 		std::vector<char> buffer;
 
 	public:

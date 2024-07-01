@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/27 16:26:00 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/01 15:14:43 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,9 @@ class Server {
 		void initServer(ServerConfig & config);
 		size_t getListen();
 		int getServerFd();
+
+		// void makeResponse(HttpRequest & request, Buffer & buffer); 
+		// 파싱된 request 구조체 넣어주면 그걸로 response 만들어서 buffer에다가 넣기
 
 };
 

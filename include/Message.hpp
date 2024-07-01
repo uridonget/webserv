@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Message.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: heolee <heolee@student.42seoul.kr>         +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:27:38 by heolee            #+#    #+#             */
-/*   Updated: 2024/06/25 16:27:39 by heolee           ###   ########.fr       */
+/*   Updated: 2024/07/01 14:43:25 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 
 class Message : public Buffer {
 	private:
-
+		
 
 	public:
 		Message(int fd);

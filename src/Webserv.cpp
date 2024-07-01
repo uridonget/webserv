@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 20:02:43 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/01 15:39:59 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,20 +49,20 @@ void Webserv::makeServerList() {
 	for (std::vector<ServerConfig>::iterator it = configs.begin(); it != configs.end(); it++) {
 		Server serv;
 		serv.initServer(*it);
-		serverFdSet.insert(serv.getServerFd());
+		// serverFdSet.insert(serv.getServerFd());
 		serverList.insert(std::make_pair(serv.getServerFd(), serv));
 	}   
 }
 
 int Webserv::checkNewClient(uintptr_t eventIdent) {
-	std::set<int>::iterator it = serverFdSet.find(eventIdent);
-	if (it == serverFdSet.end()) { // server fd가 아니다! new client 아님!
-		std::cout << "this is old client!" << std::endl;
+	std::map<int, int>::iterator it = serverFdSet.find(eventIdent);
+	if (it != serverFdSet.end()) { // server fd가 아니다! new client 아님!
+		// std::cout << "this is old client!" << std::endl;
 		return -1;
 	}
 	else {
-		std::cout << "this is new client!" << std::endl;
-		return *it; // new client
+		// std::cout << "this is new client!" << std::endl;
+		return eventIdent; // new client
 	}
 }
 
@@ -95,7 +95,7 @@ void Webserv::runServers()
 		// if (cnt == 20)
 		//	 std::exit(0);
 		int nev = kevent(kq, &changeList[0], changeList.size(), eventList, 10, &timeout);
-		std::cout << "NUMBER OF EVENT : " << nev << std::endl;
+		// std::cout << "NUMBER OF EVENT : " << nev << std::endl;
 		if (nev < 0)
 		{
 			throw RuntimeException("kevent");
@@ -108,7 +108,7 @@ void Webserv::runServers()
 		}
 		for (int i = 0; i < nev; i++)
 		{
-			printf("\n----filter : %d fflags : %x flags : %x ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
+			// printf("\n----filter : %d fflags : %x flags : %x ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
 
 			int j = 0;
 			for (; j < bufferList.size(); j++) {
@@ -151,7 +151,9 @@ void Webserv::runServers()
 			}
 			else if (eventList[i].filter == EVFILT_READ)
 			{
-				readEvent(i, j);
+				int serverPort = serverFdSet.find(eventList[i].ident)->second;
+				std::cout << "----- server port : " << serverPort << " -----" << std::endl;
+				readEvent(i, j); // 여기에 server_fd를 넣어줘야하는데 구할 방법이?
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
 			{
@@ -169,15 +171,16 @@ void Webserv::initKqueue() {
 }
 
 void Webserv::new_client(int serverFd) {
-	std::cout << "---- new client event ----" << std::endl;
+	// std::cout << "---- new client event ----" << std::endl;
 	int client_fd = accept(serverFd, NULL, NULL);
 	if (client_fd < 0) {
 		throw RuntimeException("accept");
 	} else {
+		serverFdSet.insert(std::make_pair(client_fd, serverFd));
 		setNonblock(client_fd);
 		struct kevent client_event;
 		EV_SET(&client_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		std::cout << "---- new client added " << client_fd << " ----" << std::endl;
+		// std::cout << "---- new client added " << client_fd << " ----" << std::endl;
 		changeList.push_back(client_event);
 
 		Message newClient(client_fd);
@@ -219,7 +222,7 @@ std::string Webserv::makeResponse() {
 }
 
 void Webserv::readEvent(int idx, int bufferIdx) {
-	std::cout << "****** read event ******" << std::endl;
+	// std::cout << "****** read event ******" << std::endl;
 
 	// EOF YES
 	if (eventList[idx].flags & EV_EOF) {
@@ -270,7 +273,7 @@ void Webserv::readEvent(int idx, int bufferIdx) {
 
 	RequestParser parser;
 
-    std::cout << "buffer size : " << bufferList[bufferIdx].getBuffer().size() << std::endl;
+    // std::cout << "buffer size : " << bufferList[bufferIdx].getBuffer().size() << std::endl;
 	size_t endHeader;
 	size_t endIndex = parser.checkEnd(bufferList[bufferIdx].getBuffer(), buf, n, endHeader);
     if (endIndex != RequestParser::npos)
@@ -279,7 +282,12 @@ void Webserv::readEvent(int idx, int bufferIdx) {
         std::cout << "+++++++ read end +++++++" << std::endl;
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << std::endl;
+
+		HttpRequest request = parser.requestParsing(bufferList[bufferIdx].getBuffer(), endIndex, endHeader);
+		parser.printRequest(request);
+
         bufferList[bufferIdx].getBuffer().clear();
+		
 		struct kevent client_event;
 
         EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -290,12 +298,12 @@ void Webserv::readEvent(int idx, int bufferIdx) {
 }
 
 void Webserv::writeEvent(int idx, int bufferIdx) {
-	std::cout << "****** write event ******" << std::endl;
+	// std::cout << "****** write event ******" << std::endl;
 
 
 	int clientFd = eventList[idx].ident;
-	std::cout << "HTTP REQUEST" << std::endl;
-	std::cout << bufferList[bufferIdx].getBuffer().size() << std::endl;
+	// std::cout << "HTTP REQUEST" << std::endl;
+	// std::cout << bufferList[bufferIdx].getBuffer().size() << std::endl;
 	// for (int i=0; i < bufferList[bufferIdx].getBuffer().size(); i++) {
 	// 	std::cout << bufferList[bufferIdx].getBuffer()[i];
 	// }

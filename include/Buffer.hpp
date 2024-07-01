@@ -19,18 +19,20 @@ class Buffer {
 
 	protected:
 		int fd;
-		std::vector<char> buffer;
+		std::vector<char> readBuffer;
+		std::vector<char> writeBuffer;
 
 	public:
 		Buffer(int fd);
 		virtual ~Buffer();
 
 		Buffer(const Buffer &other);
-        Buffer &operator = (const Buffer& other);
+		Buffer &operator = (const Buffer& other);
 
 		virtual int whoAmI();
 		int getFd() const;
-		std::vector<char>& getBuffer();
+		std::vector<char>& getReadBuffer();
+		std::vector<char>& getWriteBuffer();
 
 
 };

@@ -18,25 +18,31 @@ Buffer::~Buffer() {}
 
 Buffer::Buffer(const Buffer& other) {
 	this->fd = other.fd;
-	this->buffer = other.buffer;
+	this->readBuffer = other.readBuffer;
+	this->writeBuffer = other.writeBuffer;
 }
 
 Buffer& Buffer::operator = (const Buffer& other) {
 	if (this != &other) {
-	this->fd = other.fd;
-	this->buffer = other.buffer;
+		this->fd = other.fd;
+		this->readBuffer = other.readBuffer;
+		this->writeBuffer = other.writeBuffer;
 	}
 	return *this;
 }
 
 int Buffer::whoAmI() {
-    return 0;
+	return 0;
 }
 
 int Buffer::getFd() const {
-    return this->fd;
+	return this->fd;
 }
 
-std::vector<char>& Buffer::getBuffer() {
-    return this->buffer;
+std::vector<char>& Buffer::getReadBuffer() {
+	return this->readBuffer;
+}
+
+std::vector<char>& Buffer::getWriteBuffer() {
+	return this->writeBuffer;
 }

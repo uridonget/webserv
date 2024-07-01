@@ -13,27 +13,26 @@
 #include "../include/Webserv.hpp"
 
 int main(int ac, char *av[]) {
-    Webserv webserv;
+	Webserv webserv;
 
-    try {
-        if (ac != 2)
-            throw RuntimeException("Invalid argument number");
-        webserv.makeServerConfigStringList(av[1]);
-        
-        webserv.initKqueue();
-        
-        webserv.makeServerList();
-        
-        webserv.connectKqueueToServer();
+	try {
+		if (ac != 2)
+			throw RuntimeException("Invalid argument number");
+		webserv.makeServerConfigStringList(av[1]);
+		
+		webserv.initKqueue();
+		
+		webserv.makeServerList();
+		
+		webserv.connectKqueueToServer();
 
-        webserv.runServers();
-        
-        
-    } catch (const RuntimeException& e) {
-        std::cout << "Error : " << e.what() << std::endl;
-    }
-    
+		webserv.runServers();
+		
+		
+	} catch (const RuntimeException& e) {
+		std::cerr << "Error : " << e.what() << std::endl;
+		return 1;
+	}
 
-
-    
+	return 0;
 }

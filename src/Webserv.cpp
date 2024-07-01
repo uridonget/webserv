@@ -15,12 +15,12 @@
 
 Webserv::Webserv() : kq(0)
 {
-    // std::cout << "Default Webserv constructor called" << std::endl;
+	// std::cout << "Default Webserv constructor called" << std::endl;
 }
 
 Webserv::~Webserv()
 {
-    // std::cout << "Webserv destructor called" << std::endl;
+	// std::cout << "Webserv destructor called" << std::endl;
 }
 
 void Webserv::makeServerConfigStringList(const std::string & configPath) {
@@ -51,7 +51,7 @@ void Webserv::makeServerList() {
 		serv.initServer(*it);
 		serverFdSet.insert(serv.getServerFd());
 		serverList.insert(std::make_pair(serv.getServerFd(), serv));
-	}   
+	}
 }
 
 int Webserv::checkNewClient(uintptr_t eventIdent) {
@@ -130,13 +130,7 @@ void Webserv::runServers()
 			if (eventList[i].flags & EV_EOF)
 			{
 				std::cerr << "***************** EV_EOF ENTERED *****************" << std::endl; 
-				for (int i = 0; i < bufferList.size(); i++) {
-					if (bufferList[i].getFd() == eventList[i].ident) {
-						bufferList.erase(bufferList.begin() + i);
-						break;
-					}
-				}
-				// clients.erase(eventList[i].ident);
+				bufferList.erase(bufferList.begin() + j);
 				close(eventList[i].ident);
 				struct kevent client_event;
 				EV_SET(&client_event, eventList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
@@ -147,7 +141,7 @@ void Webserv::runServers()
 			int temp = checkNewClient(eventList[i].ident);
 			if (temp > 0)
 			{
-				new_client(eventList[i].ident); // new client
+				newClient(eventList[i].ident); // new client
 			}
 			else if (eventList[i].filter == EVFILT_READ)
 			{
@@ -168,23 +162,23 @@ void Webserv::initKqueue() {
 	}
 }
 
-void Webserv::new_client(int serverFd) {
+void Webserv::newClient(int serverFd) {
 	std::cout << "---- new client event ----" << std::endl;
-	int client_fd = accept(serverFd, NULL, NULL);
-	if (client_fd < 0) {
+	int clientFd = accept(serverFd, NULL, NULL);
+	if (clientFd < 0) {
 		throw RuntimeException("accept");
 	} else {
-		setNonblock(client_fd);
+		setNonblock(clientFd);
 		struct kevent client_event;
-		EV_SET(&client_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		std::cout << "---- new client added " << client_fd << " ----" << std::endl;
+		EV_SET(&client_event, clientFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		std::cout << "---- new client added " << clientFd << " ----" << std::endl;
 		changeList.push_back(client_event);
 
-		Message newClient(client_fd);
+		Message newClient(clientFd);
 		bufferList.push_back(newClient);
 		std::vector<Buffer>::iterator iter = bufferList.begin();
 		for (; iter != bufferList.end(); iter++) {
-			if ((*iter).getFd() == client_fd) {
+			if ((*iter).getFd() == clientFd) {
 				break;
 			}
 		}
@@ -236,7 +230,7 @@ void Webserv::readEvent(int idx, int bufferIdx) {
 		else if (isMessage(bufferIdx) == 2) {
 
 			// 여기는 파일 다 읽어서 클라이언트로 보낸다는거임
-			close(bufferIdx);
+			closeFile(bufferIdx);
 
 			return ;
 		}
@@ -270,65 +264,79 @@ void Webserv::readEvent(int idx, int bufferIdx) {
 
 	RequestParser parser;
 
-    std::cout << "buffer size : " << bufferList[bufferIdx].getBuffer().size() << std::endl;
+	std::cout << "buffer size : " << bufferList[bufferIdx].getReadBuffer().size() << std::endl;
 	size_t endHeader;
-	size_t endIndex = parser.checkEnd(bufferList[bufferIdx].getBuffer(), buf, n, endHeader);
-    if (endIndex != RequestParser::npos)
-    {
-        std::cout << "++++++++++++++++++++++++" << std::endl;
-        std::cout << "+++++++ read end +++++++" << std::endl;
-        std::cout << "++++++++++++++++++++++++" << std::endl;
-        std::cout << std::endl;
-        bufferList[bufferIdx].getBuffer().clear();
+	size_t endIndex = parser.checkEnd(bufferList[bufferIdx].getReadBuffer(), buf, n, endHeader);
+	if (endIndex != RequestParser::npos)
+	{
+		std::cout << "++++++++++++++++++++++++" << std::endl;
+		std::cout << "+++++++ read end +++++++" << std::endl;
+		std::cout << "++++++++++++++++++++++++" << std::endl;
+		std::cout << std::endl;
+		bufferList[bufferIdx].getReadBuffer().clear();
 		struct kevent client_event;
 
-        EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-        changeList.push_back(client_event);
+		EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		changeList.push_back(client_event);
 
-    }
+	}
 
 }
 
 void Webserv::writeEvent(int idx, int bufferIdx) {
 	std::cout << "****** write event ******" << std::endl;
 
+	// int clientFd = eventLis                 t[idx].ident;
+	// std::cout << "HTTP REQUEST" << std::endl;
+	// std::cout << bufferList[bufferIdx].getWriteBuffer().size() << std::endl;
+	// for (int i = 0; i < bufferList[bufferIdx].getWriteBuffer().size(); i++) {
+	// 	std::cout << bufferList[bufferIdx].getWriteBuffer()[i];
+	// }
 
-	int clientFd = eventList[idx].ident;
-	std::cout << "HTTP REQUEST" << std::endl;
-	std::cout << bufferList[bufferIdx].getBuffer().size() << std::endl;
-	// for (int i=0; i < bufferList[bufferIdx].getBuffer().size(); i++) {
-	// 	std::cout << bufferList[bufferIdx].getBuffer()[i];
+
+	// 일단 write하셈 ㅋㅋ
+	// int writeSize = write();
+
+	// 여기서 사이즈가 서로 다르다는건 버퍼 사이즈 한계로 다 못썼다는 뜻 다시ㄱㄱ
+	// 이터레이터로 어디까지 썼는지 알고 있어야 함
+	// if (writeSize != bufferList[bufferIdx].getWriteBuffer()){
+	// 	return ;
 	// }
 
 	// Message == 1
-	if (isMessage(bufferIdx) == 1) {
+	// 응답 보냈다는 뜻
+	// if (isMessage(bufferIdx) == 1) {
 
-		// 여기 뭔지 모르겠음;;
-		// struct kevent clientEvent;
-		// EV_SET(&clientEvent, clientFd, EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
-		// changeList.push_back(clientEvent);
-		return ;
-	}
+	// 	successResponse(bufferIdx);
+	// 	return ;
+	// }
 
 	// File == 2
+	// 파일에 쓴다 POST 요청 성공 이라는 뜻
+	// successFileWrite(int bufferIdx);
+
+	// 서버 구현 필요!
+	// 여기서 서버가 응답 메세지 생성 해줘야함
+
+	// return;
 
 	std::string response = makeResponse();
-	int n = write(clientFd, response.c_str(), response.length());
+	int n = write(bufferList[bufferIdx].getFd(), response.c_str(), response.length());
 	if (n == -1)
 	{
-		if (close(clientFd) == -1)
+		if (close(bufferList[bufferIdx].getFd()) == -1)
 			std::cout << "already closed fd!!!" << std::endl;
 		bufferList.erase(bufferList.begin() + bufferIdx);
 		struct kevent client_event;
 		struct kevent client_event2;
-		EV_SET(&client_event2, clientFd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		EV_SET(&client_event, clientFd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+		EV_SET(&client_event2, bufferList[bufferIdx].getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		EV_SET(&client_event, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
 		changeList.push_back(client_event);
 		changeList.push_back(client_event2);
 		return ;
 	}
 	struct kevent client_event1;
-	EV_SET(&client_event1, clientFd, EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
+	EV_SET(&client_event1, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
 	changeList.push_back(client_event1);
 }
 

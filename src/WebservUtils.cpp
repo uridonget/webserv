@@ -44,3 +44,17 @@ void Webserv::closeFile(int bufferIdx) {
 	// push server
 
 }
+
+void Webserv::successResponse(int bufferIdx) {
+	struct kevent clientEvent;
+	EV_SET(&clientEvent, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
+	changeList.push_back(clientEvent);
+	bufferList.erase(bufferList.begin() + bufferIdx);
+}
+
+void Webserv::successFileWrite(int bufferIdx) {
+	struct kevent clientEvent;
+	EV_SET(&clientEvent, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
+	changeList.push_back(clientEvent);
+	bufferList.erase(bufferList.begin() + bufferIdx);
+}

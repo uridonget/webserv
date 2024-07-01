@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 16:13:30 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/01 17:11:04 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -279,7 +279,7 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << std::endl;
 
-		Buffer buffer = bufferList[bufferIdx];
+		Buffer &buffer = bufferList[bufferIdx];
 		HttpRequest request = parser.requestParsing(buffer.getReadBuffer(), endIndex, endHeader);
 		// parser.printRequest(request);
 
@@ -333,8 +333,13 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 
 	// return;
 
-	std::string response = makeResponse();
+	//std::cout << "address : " << &(bufferList[bufferIdx]) << std::endl;
+	//std::string response = makeResponse();
+
+	std::string response(bufferList[bufferIdx].getWriteBuffer().begin(), bufferList[bufferIdx].getWriteBuffer().end());
+	std::cout << "CHECK!!!!!\n\n" << response << std::endl;
 	int n = write(bufferList[bufferIdx].getFd(), response.c_str(), response.length());
+	
 	if (n == -1)
 	{
 		if (close(bufferList[bufferIdx].getFd()) == -1)

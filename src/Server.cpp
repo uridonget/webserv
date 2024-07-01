@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 16:14:26 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/01 17:09:09 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,8 @@ int Server::getServerFd() {
 void Server::makeResponse(HttpRequest & request, Buffer & buffer) {
 	std::ostringstream response;
     
+    std::cout << "address : " << &buffer << std::endl;
+
     if (request.method == "GET") {
         // 기본 상태 라인
         response << request.httpVersion << " 200 OK\r\n";
@@ -97,6 +99,8 @@ void Server::makeResponse(HttpRequest & request, Buffer & buffer) {
         response << body;
     }
     std::string responseStr = response.str();
-	std::cout << "check response\n\n\n" << responseStr << std::endl;
+	// std::cout << "check response\n\n\n" << responseStr << std::endl;
 	buffer.getWriteBuffer().insert(buffer.getWriteBuffer().end(), responseStr.begin(), responseStr.end());
+    std::string check(buffer.getWriteBuffer().begin(), buffer.getWriteBuffer().end());
+    // std::cout << "check!!!!!!!!!!!!!!!!!!!!\n\n\n" << check << std::endl;
 }

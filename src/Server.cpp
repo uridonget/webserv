@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 16:08:08 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/01 16:14:26 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,5 +98,5 @@ void Server::makeResponse(HttpRequest & request, Buffer & buffer) {
     }
     std::string responseStr = response.str();
 	std::cout << "check response\n\n\n" << responseStr << std::endl;
-	buffer.getBuffer().insert(buffer.getBuffer().end(), responseStr.begin(), responseStr.end());
+	buffer.getWriteBuffer().insert(buffer.getWriteBuffer().end(), responseStr.begin(), responseStr.end());
 }

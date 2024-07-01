@@ -49,7 +49,7 @@ class Webserv {
 		
 		int checkNewClient(uintptr_t enventIdent);
 
-		void new_client(int serverFd);
+		void newClient(int serverFd);
 		std::string makeResponse();
 		void readEvent(int idx, int bufferIdx, int serverFd);
 		void writeEvent(int idx, int bufferIdx, int serverFd);
@@ -58,6 +58,8 @@ class Webserv {
 		int isMessage(int bufferIdx);
 		void closeSocket(int bufferIdx);
 		void closeFile(int bufferIdx);
+		void successResponse(int bufferIdx);
+		void successFileWrite(int bufferIdx);
 
 };
 

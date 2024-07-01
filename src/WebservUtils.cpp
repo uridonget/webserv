@@ -21,25 +21,26 @@ void setNonblock(int fd) {
 int Webserv::isMessage(int bufferIdx) {
 	// Message 1
 	// File 2
-	return bufferList[bufferIdx].whoAmI();
+	return bufferList[bufferIdx]->whoAmI();
 }
 
 void Webserv::closeSocket(int bufferIdx) {
 	struct kevent clientEvent;
-	EV_SET(&clientEvent, bufferList[bufferIdx].getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	EV_SET(&clientEvent, bufferList[bufferIdx]->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	changeList.push_back(clientEvent);
 	struct kevent clientEvent1;
-	EV_SET(&clientEvent1, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+	EV_SET(&clientEvent1, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
 	changeList.push_back(clientEvent1);
-	close(bufferList[bufferIdx].getFd());
+	close(bufferList[bufferIdx]->getFd());
+	delete bufferList[bufferIdx];
 	bufferList.erase(bufferList.begin() + bufferIdx);
 }
 
 void Webserv::closeFile(int bufferIdx) {
 	struct kevent fileEvent;
-	EV_SET(&fileEvent, bufferList[bufferIdx].getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	EV_SET(&fileEvent, bufferList[bufferIdx]->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	changeList.push_back(fileEvent);
-	close(bufferList[bufferIdx].getFd());
+	close(bufferList[bufferIdx]->getFd());
 
 	// push server
 
@@ -47,15 +48,15 @@ void Webserv::closeFile(int bufferIdx) {
 
 void Webserv::successResponse(int bufferIdx) {
 	struct kevent clientEvent;
-	EV_SET(&clientEvent, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
+	EV_SET(&clientEvent, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
 	changeList.push_back(clientEvent);
-	bufferList[bufferIdx].getWriteBuffer().clear();
 }
 
 void Webserv::successFileWrite(int bufferIdx) {
 	struct kevent clientEvent;
-	EV_SET(&clientEvent, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
+	EV_SET(&clientEvent, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
 	changeList.push_back(clientEvent);
+	delete bufferList[bufferIdx];
 	bufferList.erase(bufferList.begin() + bufferIdx);
-	close(bufferList[bufferIdx].getFd());
+	close(bufferList[bufferIdx]->getFd());
 }

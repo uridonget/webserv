@@ -59,7 +59,7 @@ int Server::getServerFd() {
 	return (serverFd);
 }
 
-void Server::makeResponse(HttpRequest & request, Buffer & buffer) {
+void Server::makeResponse(HttpRequest & request, Buffer * buffer) {
 	std::ostringstream response;
     
     std::cout << "address : " << &buffer << std::endl;
@@ -100,7 +100,7 @@ void Server::makeResponse(HttpRequest & request, Buffer & buffer) {
     }
     std::string responseStr = response.str();
 	// std::cout << "check response\n\n\n" << responseStr << std::endl;
-	buffer.getWriteBuffer().insert(buffer.getWriteBuffer().end(), responseStr.begin(), responseStr.end());
-    std::string check(buffer.getWriteBuffer().begin(), buffer.getWriteBuffer().end());
+	buffer->getWriteBuffer().insert(buffer->getWriteBuffer().end(), responseStr.begin(), responseStr.end());
+    std::string check(buffer->getWriteBuffer().begin(), buffer->getWriteBuffer().end());
     // std::cout << "check!!!!!!!!!!!!!!!!!!!!\n\n\n" << check << std::endl;
 }

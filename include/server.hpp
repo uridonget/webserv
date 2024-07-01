@@ -32,7 +32,7 @@ class Server {
 		size_t getListen();
 		int getServerFd();
 
-		void makeResponse(HttpRequest & request, Buffer & buffer); 
+		void makeResponse(HttpRequest & request, Buffer * buffer); 
 		// 파싱된 request 구조체 넣어주면 그걸로 response 만들어서 buffer에다가 넣기
 
 };

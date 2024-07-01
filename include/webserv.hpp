@@ -32,7 +32,7 @@ class Webserv {
 		int kq;
 		std::vector<struct kevent> changeList;
 		struct kevent eventList[10];
-		std::vector<Buffer> bufferList;
+		std::vector<Buffer*> bufferList;
 
 	public:
 		Webserv();

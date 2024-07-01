@@ -164,30 +164,17 @@ void Webserv::initKqueue() {
 	}
 }
 
-<<<<<<< HEAD
-void Webserv::new_client(int serverFd) {
-	// std::cout << "---- new client event ----" << std::endl;
-	int client_fd = accept(serverFd, NULL, NULL);
-	if (client_fd < 0) {
-		throw RuntimeException("accept");
-	} else {
-		serverFdSet.insert(std::make_pair(client_fd, serverFd));
-		setNonblock(client_fd);
-		struct kevent client_event;
-		EV_SET(&client_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		// std::cout << "---- new client added " << client_fd << " ----" << std::endl;
-=======
 void Webserv::newClient(int serverFd) {
-	std::cout << "---- new client event ----" << std::endl;
+	// std::cout << "---- new client event ----" << std::endl;
 	int clientFd = accept(serverFd, NULL, NULL);
 	if (clientFd < 0) {
 		throw RuntimeException("accept");
 	} else {
+		serverFdSet.insert(std::make_pair(clientFd, serverFd));
 		setNonblock(clientFd);
 		struct kevent client_event;
 		EV_SET(&client_event, clientFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		std::cout << "---- new client added " << clientFd << " ----" << std::endl;
->>>>>>> heolee
+		// std::cout << "---- new client added " << client_fd << " ----" << std::endl;
 		changeList.push_back(client_event);
 
 		Message newClient(clientFd);
@@ -280,23 +267,6 @@ void Webserv::readEvent(int idx, int bufferIdx) {
 
 	RequestParser parser;
 
-<<<<<<< HEAD
-    // std::cout << "buffer size : " << bufferList[bufferIdx].getBuffer().size() << std::endl;
-	size_t endHeader;
-	size_t endIndex = parser.checkEnd(bufferList[bufferIdx].getBuffer(), buf, n, endHeader);
-    if (endIndex != RequestParser::npos)
-    {
-        std::cout << "++++++++++++++++++++++++" << std::endl;
-        std::cout << "+++++++ read end +++++++" << std::endl;
-        std::cout << "++++++++++++++++++++++++" << std::endl;
-        std::cout << std::endl;
-
-		HttpRequest request = parser.requestParsing(bufferList[bufferIdx].getBuffer(), endIndex, endHeader);
-		parser.printRequest(request);
-
-        bufferList[bufferIdx].getBuffer().clear();
-		
-=======
 	std::cout << "buffer size : " << bufferList[bufferIdx].getReadBuffer().size() << std::endl;
 	size_t endHeader;
 	size_t endIndex = parser.checkEnd(bufferList[bufferIdx].getReadBuffer(), buf, n, endHeader);
@@ -307,7 +277,6 @@ void Webserv::readEvent(int idx, int bufferIdx) {
 		std::cout << "++++++++++++++++++++++++" << std::endl;
 		std::cout << std::endl;
 		bufferList[bufferIdx].getReadBuffer().clear();
->>>>>>> heolee
 		struct kevent client_event;
 
 		EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -328,13 +297,6 @@ void Webserv::writeEvent(int idx, int bufferIdx) {
 	// }
 
 
-<<<<<<< HEAD
-	int clientFd = eventList[idx].ident;
-	// std::cout << "HTTP REQUEST" << std::endl;
-	// std::cout << bufferList[bufferIdx].getBuffer().size() << std::endl;
-	// for (int i=0; i < bufferList[bufferIdx].getBuffer().size(); i++) {
-	// 	std::cout << bufferList[bufferIdx].getBuffer()[i];
-=======
 	// 일단 write하셈 ㅋㅋ
 	// int writeSize = write();
 
@@ -342,7 +304,6 @@ void Webserv::writeEvent(int idx, int bufferIdx) {
 	// 이터레이터로 어디까지 썼는지 알고 있어야 함
 	// if (writeSize != bufferList[bufferIdx].getWriteBuffer()){
 	// 	return ;
->>>>>>> heolee
 	// }
 
 	// Message == 1

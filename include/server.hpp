@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 15:14:43 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/01 15:58:08 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include "ServerConfig.hpp"
 #include "Webserv.hpp"
+#include "Buffer.hpp"
 
 class Server {
 	private:
@@ -31,7 +32,7 @@ class Server {
 		size_t getListen();
 		int getServerFd();
 
-		// void makeResponse(HttpRequest & request, Buffer & buffer); 
+		void makeResponse(HttpRequest & request, Buffer & buffer); 
 		// 파싱된 request 구조체 넣어주면 그걸로 response 만들어서 buffer에다가 넣기
 
 };

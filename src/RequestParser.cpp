@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/01 15:17:30 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/01 16:06:33 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,36 +185,4 @@ struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, 
         parsedRequest.body.push_back(request[i]);
     }
     return parsedRequest;
-}
-
-
-void RequestParser::printRequest(HttpRequest& request) {
-    if (!request.method.empty()) {
-        std::cout << "Method: " << request.method << std::endl;
-    }
-    if (!request.url.empty()) {
-        std::cout << "URL: " << request.url << std::endl;
-    }
-    if (!request.httpVersion.empty()) {
-        std::cout << "HTTP Version: " << request.httpVersion << std::endl;
-    }
-    if (!request.host.empty()) {
-        std::cout << "Host: " << request.host << std::endl;
-    }
-    if (!request.userAgent.empty()) {
-        std::cout << "User Agent: " << request.userAgent << std::endl;
-    }
-    if (!request.accept.empty()) {
-        std::cout << "Accept: " << request.accept << std::endl;
-    }
-    if (!request.contentLength.empty()) {
-        std::cout << "Content Length: " << request.contentLength << std::endl;
-    }
-    if (!request.body.empty()) {
-        std::cout << "Body: ";
-        for (size_t i = 0; i < request.body.size(); ++i) {
-            std::cout << request.body[i];
-        }
-        std::cout << std::endl;
-    }
 }

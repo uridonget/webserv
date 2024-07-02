@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 16:13:30 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/02 16:42:17 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,7 +217,39 @@ std::string Webserv::makeResponse() {
 	return (response);
 }
 
-void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
+void printHttpRequest(const HttpRequest& request) {
+    if (!request.method.empty()) {
+        std::cout << "Method: " << request.method << std::endl;
+    }
+    if (!request.url.empty()) {
+        std::cout << "URL: " << request.url << std::endl;
+    }
+    if (!request.httpVersion.empty()) {
+        std::cout << "HTTP Version: " << request.httpVersion << std::endl;
+    }
+    if (!request.host.empty()) {
+        std::cout << "Host: " << request.host << std::endl;
+    }
+    if (!request.userAgent.empty()) {
+        std::cout << "User-Agent: " << request.userAgent << std::endl;
+    }
+    if (!request.accept.empty()) {
+        std::cout << "Accept: " << request.accept << std::endl;
+    }
+    if (!request.contentLength.empty()) {
+        std::cout << "Content-Length: " << request.contentLength << std::endl;
+    }
+    if (!request.body.empty()) {
+        std::cout << "Body: ";
+        for (std::vector<char>::const_iterator it = request.body.begin(); it != request.body.end(); ++it) {
+            std::cout << *it;
+        }
+        std::cout << std::endl;
+    }
+}
+
+void Webserv::readEvent(int idx, int bufferIdx, int serverFd) 
+{
 	// std::cout << "****** read event ******" << std::endl;
 
 	// EOF YES
@@ -280,23 +312,28 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
         std::cout << std::endl;
 
 		Buffer buffer = bufferList[bufferIdx];
-		HttpRequest request = parser.requestParsing(buffer.getReadBuffer(), endIndex, endHeader);
-		// parser.printRequest(request);
-
-		serverList[serverFd].makeResponse(request, buffer);
-
-        buffer.getReadBuffer().clear();
 		
-		struct kevent client_event;
-
-		EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		changeList.push_back(client_event);
-
+		llParser parser(bufferList[bufferIdx].getReadBuffer(), endHeader);
+		try{
+			HttpRequest request = parser.parse();
+			printHttpRequest(request);
+			serverList[serverFd].makeResponse(request, buffer);
+       		struct kevent client_event;
+			EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+			changeList.push_back(client_event);
+		}
+		catch (const std::runtime_error &e)
+		{
+			std::cerr << "Parsing error: " << e.what() << std::endl;
+		}
+		std::vector<char> temp =  std::vector<char>(buffer.getReadBuffer().begin() + endIndex, buffer.getReadBuffer().end());
+		buffer.getReadBuffer().clear();
+		buffer.getReadBuffer() = temp;
 	}
-
 }
 
-void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
+void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) 
+{
 	// std::cout << "****** write event ******" << std::endl;
 
 	// int clientFd = eventLis                 t[idx].ident;

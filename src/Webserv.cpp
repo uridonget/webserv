@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 17:11:04 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:40:11 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,7 +286,7 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 		HttpRequest request = parser.requestParsing(buffer->getReadBuffer(), endIndex, endHeader);
 		// parser.printRequest(request);
 
-		serverList[serverFd].makeResponse(request, buffer);
+		// serverList[serverFd].makeResponse(request, buffer);
 
         buffer->getReadBuffer().clear();
 		
@@ -347,15 +347,16 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 
 	// File == 2
 	// 파일에 쓴다 POST 요청 성공 이라는 뜻
-	// successFileWrite(int bufferIdx);
+	successFileWrite(bufferIdx);
 
 	// 서버 구현 필요!
 	// 여기서 서버가 응답 메세지 생성 해줘야함
 
 	// return;
 
-	//std::cout << "address : " << &(bufferList[bufferIdx]) << std::endl;
-	//std::string response = makeResponse();
+
+	// std::cout << "address : " << &(bufferList[bufferIdx]) << std::endl;
+	// std::string response = makeResponse();
 
 	// std::string response(bufferList[bufferIdx].getWriteBuffer().begin(), bufferList[bufferIdx].getWriteBuffer().end());
 	// std::cout << "CHECK!!!!!\n\n" << response << std::endl;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerConfig.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:31:23 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 13:34:49 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/03 18:00:17 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -201,4 +201,9 @@ void ServerConfig::printConfig() {
 
 size_t ServerConfig::getListen() {
     return (listen);
+}
+
+const std::string &ServerConfig::getRoot() const
+{
+    return root;
 }

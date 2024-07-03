@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 17:09:09 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/03 18:05:29 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,40 @@ int Server::getServerFd() {
 	return (serverFd);
 }
 
-void Server::makeResponse(HttpRequest & request, Buffer * buffer) {
+Message *Server::afterProcessRequest(File &file)
+{  
+    std::map<File *, HttpRequest>::iterator it = requestList.find(&file);
+    if (it != requestList.end())
+    {
+        std::string header = makeResponse(it->second, static_cast<Buffer*>(&file));
+        Message *res = new Message(it->second.fd);
+        res->getWriteBuffer().insert(res->getWriteBuffer().begin(), header.begin(), header.end());
+        res->getWriteBuffer().insert(res->getWriteBuffer().begin(), file.getReadBuffer().begin(), file.getReadBuffer().end());
+        return res;
+    }
+    return (0);
+}
+
+File *Server::processRequest(HttpRequest &request)
+{
+    // if (request.method == GET)
+    // {
+    std::string target;
+    target += config.getRoot();
+    target += request.url;
+    int fileFd = open(target.c_str(), O_RDONLY);
+    if (fileFd > 0)
+    {
+        // File *res = new File;
+    }
+    else
+    {
+        // makeResponse(request,)
+    }
+    // }
+}
+
+std::string Server::makeResponse(HttpRequest &request, Buffer *buffer) {
 	std::ostringstream response;
     
     std::cout << "address : " << &buffer << std::endl;
@@ -71,23 +104,13 @@ void Server::makeResponse(HttpRequest & request, Buffer * buffer) {
         // 기본 헤더
         response << "Content-Type: text/html\r\n";
         response << "Connection: close\r\n";
-        
-        // 요청 URL에 따른 본문 내용 결정
-        std::string body;
-        if (request.url == "/") {
-            body = "<html><body><h1>Welcome to the Home Page</h1></body></html>";
-        } else {
-            body = "<html><body><h1>404 Not Found</h1></body></html>";
-        }
 
         // Content-Length 헤더 추가
-        response << "Content-Length: " << body.size() << "\r\n";
-        
+        if (buffer != 0)
+            response << "Content-Length: " << buffer->getReadBuffer().size() << "\r\n";
         // 빈 줄로 헤더와 본문 구분
         response << "\r\n";
         
-        // 응답 본문 추가
-        response << body;
     } else {
         // GET 메소드가 아닌 경우 405 Method Not Allowed 응답
         std::string body = "<html><body><h1>405 Method Not Allowed</h1></body></html>";
@@ -99,8 +122,5 @@ void Server::makeResponse(HttpRequest & request, Buffer * buffer) {
         response << body;
     }
     std::string responseStr = response.str();
-	// std::cout << "check response\n\n\n" << responseStr << std::endl;
-	buffer->getWriteBuffer().insert(buffer->getWriteBuffer().end(), responseStr.begin(), responseStr.end());
-    std::string check(buffer->getWriteBuffer().begin(), buffer->getWriteBuffer().end());
-    // std::cout << "check!!!!!!!!!!!!!!!!!!!!\n\n\n" << check << std::endl;
+    return responseStr;
 }

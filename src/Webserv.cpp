@@ -264,11 +264,8 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 	
 	//std::cout << "buffer size : " << bufferList[bufferIdx].getReadBuffer().size() << std::endl;
 	RequestParser parser;
-<<<<<<< HEAD
 
 	std::cout << "buffer size : " << bufferList[bufferIdx]->getReadBuffer().size() << std::endl;
-=======
->>>>>>> 96092613a3aa9553f841c45c77c7753d66017939
 	size_t endHeader;
 	size_t endIndex = parser.checkEnd(bufferList[bufferIdx]->getReadBuffer(), buf, n, endHeader);
     if (endIndex != RequestParser::npos)
@@ -278,7 +275,6 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << std::endl;
 
-<<<<<<< HEAD
 		Buffer* buffer = bufferList[bufferIdx];
 		llParser llparser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
 		HttpRequest request = llparser.parse();
@@ -291,24 +287,6 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 		struct kevent clientEvent;
 		EV_SET(&clientEvent, clientFd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		changeList.push_back(clientEvent);
-=======
-		Buffer buffer = bufferList[bufferIdx];
-		llParser parser(bufferList[bufferIdx].getReadBuffer(), endHeader);
-		try{
-			HttpRequest request = parser.parse();
-			serverList[serverFd].makeResponse(request, buffer);
-       		struct kevent client_event;
-			EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-			changeList.push_back(client_event);
-		}
-		catch (const std::runtime_error &e)
-		{
-			std::cerr << "Parsing error: " << e.what() << std::endl;
-		}
-		std::vector<char> temp =  std::vector<char>(buffer.getReadBuffer().begin() + endIndex + 4, buffer.getReadBuffer().end());
-		buffer.getReadBuffer().clear();
-		buffer.getReadBuffer() = temp;
->>>>>>> 96092613a3aa9553f841c45c77c7753d66017939
 	}
 
 }

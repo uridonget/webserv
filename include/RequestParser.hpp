@@ -15,7 +15,6 @@
 
 #include "Library.hpp"
 #include "llParser.hpp"
-<<<<<<< HEAD
 
 class RequestParser {
 
@@ -34,8 +33,6 @@ class RequestParser {
 		size_t checkEnd(std::vector<char> &buf, char *append, size_t size, size_t & endHeader);
 		struct HttpRequest requestParsing(std::vector<char> fullRequest, size_t endIndex, size_t & endHeader);
 		void setBody(HttpRequest & request, std::vector<char> & buf, size_t & endHeader, size_t & endIndex);
-=======
->>>>>>> 96092613a3aa9553f841c45c77c7753d66017939
 
 };
 

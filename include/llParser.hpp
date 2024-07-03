@@ -3,17 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   llParser.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-<<<<<<< HEAD
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/02 13:37:19 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/02 16:50:18 by haejeong         ###   ########.fr       */
-=======
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:37:19 by sangyhan          #+#    #+#             */
 /*   Updated: 2024/07/03 18:13:46 by sangyhan         ###   ########.fr       */
->>>>>>> 96092613a3aa9553f841c45c77c7753d66017939
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +47,6 @@ const char SP = ' ';
  * vchar = CHAR
 */
 
-<<<<<<< HEAD
 class llParser{
 	public:
 		llParser(std::vector<char> buffer, size_t endHeader);
@@ -77,28 +69,3 @@ class llParser{
 };
 
 #endif
-=======
-class llParser
-{
-public:
-    llParser(std::vector<char> buffer, size_t endHeader);
-    HttpRequest parse();
-
-private:
-    std::istringstream stream;
-    char currentChar;
-
-    llParser() {};
-    void nextChar();
-    void consumeSP();
-    void consumeCRLF();
-    std::string parseToken();
-    std::pair<std::string, std::string> fieldline();
-    std::string parseFieldName();
-    std::string parseFieldValue();
-    void consumeOWS();
-    void expect(char expected);
-};
-
-#endif
->>>>>>> 96092613a3aa9553f841c45c77c7753d66017939

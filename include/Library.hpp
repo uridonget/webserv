@@ -59,7 +59,6 @@ struct HttpRequest {
     std::string contentLength;
     std::map<std::string, std::string> headers;
     std::vector<char> body;
-    std::map<std::string, std::string> headers;
 
     HttpRequest()
         : method(NONE), 

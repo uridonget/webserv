@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Library.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/02 16:15:51 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/01 15:01:03 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,6 @@ struct HttpRequest {
     std::string userAgent;
     std::string accept;
     std::string contentLength;
-    std::map<std::string, std::string> headers;
     std::vector<char> body;
 
     HttpRequest()

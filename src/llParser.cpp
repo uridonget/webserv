@@ -1,160 +1,193 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   llParser.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/02 14:08:20 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/02 16:35:34 by sangyhan         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <cctype>
+#include <map>
+#include <stdexcept>
 
-#include "../include/llParser.hpp"
+// Define constants
+const char NULL_CHAR = '\0';
+const char CR = '\r';
+const char LF = '\n';
+const char SP = ' ';
 
-class ParseException : public std::runtime_error
+// HTTP Request Structure
+struct HttpRequest
 {
-public:
+    std::string method;
+    std::string target;
+    std::string version;
+    std::map<std::string, std::string> headers;
+};
+
+// Custom exception for parsing errors
+struct ParseException : public std::runtime_error
+{
     ParseException(const std::string &msg) : std::runtime_error(msg) {}
 };
 
-llParser::llParser(std::vector<char> buffer, size_t endHeader) : stream(std::string(buffer.begin(), buffer.begin() + endHeader + 4)), currentChar(NULL_CHAR)
+// LL Parser for HTTP request
+class HttpParser
 {
-    nextChar();
-}
-
-HttpRequest llParser::parse()
-{
-    HttpRequest request;
-    request.method = parseToken();
-    consumeSP();
-    request.url = parseToken();
-    consumeSP();
-    request.httpVersion = parseToken();
-    consumeCRLF();
-    while (currentChar != NULL_CHAR && currentChar != CR)
-    {
-        std::pair<std::string, std::string> header = fieldline();
-        request.headers[header.first] = header.second;
-    }
-    consumeCRLF();
-    expect('\0');
-    if (request.headers.find("User-Agent") != request.headers.end())
-    {
-        request.userAgent = request.headers["User-Agent"];
-    }
-    if (request.headers.find("Accept") != request.headers.end())
-    {
-        request.accept = request.headers["Accept"];
-    }
-    if (request.headers.find("Content-Length") != request.headers.end())
-    {
-        request.userAgent = request.headers["Content-Length"];
-    }
-    return request;
-}
-
-void llParser::nextChar()
-{
-    stream.get(currentChar);
-    if (stream.eof())
-    {
-        currentChar = NULL_CHAR;
-    }
-}
-
-void llParser::consumeSP()
-{
-    if (currentChar == SP)
+public:
+    HttpParser(const std::string &data) : stream(data), currentChar(NULL_CHAR)
     {
         nextChar();
     }
-    else
-    {
-        throw ParseException("Expected SP");
-    }
-}
 
-void llParser::consumeCRLF()
-{
-    if (currentChar == CR)
+    HttpRequest parse()
     {
-        nextChar();
-        if (currentChar == LF)
+        HttpRequest request;
+        request.method = parseToken();
+        consumeWhitespace();
+        request.target = parseToken();
+        consumeWhitespace();
+        request.version = parseToken();
+        consumeCRLF();
+
+        while (currentChar != NULL_CHAR && currentChar != CR)
+        {
+            auto header = parseHeader();
+            request.headers[header.first] = header.second;
+        }
+        consumeCRLF(); // consume the last CRLF after headers
+
+        return request;
+    }
+
+private:
+    std::istringstream stream;
+    char currentChar;
+
+    void nextChar()
+    {
+        stream.get(currentChar);
+        if (stream.eof())
+        {
+            currentChar = NULL_CHAR;
+        }
+    }
+
+    void consumeWhitespace()
+    {
+        if (currentChar == SP)
         {
             nextChar();
         }
         else
         {
-            throw ParseException("Expected LF after CR");
+            throw ParseException("Expected SP");
         }
     }
-    else
-    {
-        throw ParseException("Expected CRLF");
-    }
-}
 
-std::string llParser::parseToken()
-{
-    std::string token;
-    while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != SP && currentChar != '\t')
+    void consumeCRLF()
     {
-        token += currentChar;
+        if (currentChar == CR)
+        {
+            nextChar();
+            if (currentChar == LF)
+            {
+                nextChar();
+            }
+            else
+            {
+                throw ParseException("Expected LF after CR");
+            }
+        }
+        else
+        {
+            throw ParseException("Expected CRLF");
+        }
+    }
+
+    std::string parseToken()
+    {
+        std::string token;
+        while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR \
+             && currentChar != SP && currentChar != '\t')
+        {
+            token += currentChar;
+            nextChar();
+        }
+        if (token.size() == 0)
+        {
+            throw ParseException("Expected token");
+        }
+        return token;
+    }
+
+    std::pair<std::string, std::string> parseHeader()
+    {
+        std::string name = parseFieldName();
+        expect(':');
         nextChar();
+        consumeOptionalWhitespace();
+        std::string value = parseFieldValue();
+        consumeCRLF();
+        return (std::make_pair(name, value));
     }
-    if (token.size() == 0)
-    {
-        throw ParseException("Expected token");
-    }
-    return token;
-}
 
-std::pair<std::string, std::string> llParser::fieldline()
-{
-    std::string name = parseFieldName();
-    expect(':');
-    nextChar();
-    consumeOWS();
-    std::string value = parseFieldValue();
-    consumeCRLF();
-    return (std::make_pair(name, value));
-}
-
-std::string llParser::parseFieldName()
-{
-    std::string name;
-    while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != SP && currentChar != '\t' && currentChar != ':')
+    std::string parseFieldName()
     {
-        name += currentChar;
-        nextChar();
+        std::string name;
+        while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR \
+             && currentChar != SP && currentChar != '\t' && currentChar != ':')
+        {
+            name += currentChar;
+            nextChar();
+        }
+        return name;
     }
-    return name;
-}
 
-std::string llParser::parseFieldValue()
-{
-    std::string value;
-    while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR)
+    std::string parseFieldValue()
     {
-        value += currentChar;
-        nextChar();
+        std::string value;
+        while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR)
+        {
+            value += currentChar;
+            nextChar();
+        }
+        return value;
     }
-    return value;
-}
 
-void llParser::consumeOWS()
-{
-    while (currentChar == ' ')
+    void consumeOptionalWhitespace()
     {
-        nextChar();
+        while (currentChar == ' ')
+        {
+            nextChar();
+        }
     }
-}
 
-void llParser::expect(char expected)
-{
-    if (currentChar != expected)
+    void expect(char expected)
     {
-        throw ParseException(std::string("Expected '") + expected + "' but found '" + currentChar + "'");
+        if (currentChar != expected)
+        {
+            throw ParseException(std::string("Expected '") + expected + "' but found '" + currentChar + "'");
+        }
     }
+};
+
+int main()
+{
+    std::string requestStr = "GET /index.html HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n";
+    HttpParser parser(requestStr);
+
+    try
+    {
+        HttpRequest request = parser.parse();
+        std::cout << "Method: " << request.method << std::endl;
+        std::cout << "Target: " << request.target << std::endl;
+        std::cout << "Version: " << request.version << std::endl;
+        std::cout << "Headers:" << std::endl;
+        for (const auto &header : request.headers)
+        {
+            std::cout << header.first << ": " << header.second << std::endl;
+        }
+    }
+    catch (const ParseException &e)
+    {
+        std::cerr << "Parsing error: " << e.what() << std::endl;
+    }
+
+    return 0;
 }

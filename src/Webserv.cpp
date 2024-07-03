@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/03 16:40:11 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/03 18:29:34 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -268,11 +268,9 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 
 	// Message == 1
 	// 여기서 쭉쭉 내려가면 됨
-
-
+	
+	//std::cout << "buffer size : " << bufferList[bufferIdx].getReadBuffer().size() << std::endl;
 	RequestParser parser;
-
-	std::cout << "buffer size : " << bufferList[bufferIdx]->getReadBuffer().size() << std::endl;
 	size_t endHeader;
 	size_t endIndex = parser.checkEnd(bufferList[bufferIdx]->getReadBuffer(), buf, n, endHeader);
     if (endIndex != RequestParser::npos)
@@ -282,19 +280,22 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
         std::cout << "++++++++++++++++++++++++" << std::endl;
         std::cout << std::endl;
 
-		Buffer* buffer = bufferList[bufferIdx];
-		HttpRequest request = parser.requestParsing(buffer->getReadBuffer(), endIndex, endHeader);
-		// parser.printRequest(request);
-
-		// serverList[serverFd].makeResponse(request, buffer);
-
-        buffer->getReadBuffer().clear();
-		
-		struct kevent client_event;
-
-		EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		changeList.push_back(client_event);
-
+		Buffer *buffer = bufferList[bufferIdx];
+		llParser parser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
+		try{
+			HttpRequest request = parser.parse();
+			serverList[serverFd].makeResponse(request, buffer);
+       		struct kevent client_event;
+			EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+			changeList.push_back(client_event);
+		}
+		catch (const std::runtime_error &e)
+		{
+			std::cerr << "Parsing error: " << e.what() << std::endl;
+		}
+		std::vector<char> temp =  std::vector<char>(buffer->getReadBuffer().begin() + endIndex + 4, buffer->getReadBuffer().end());
+		buffer->getReadBuffer().clear();
+		buffer->getReadBuffer() = temp;
 	}
 
 }

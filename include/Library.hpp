@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/03 18:03:22 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/03 18:24:58 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,7 @@ struct HttpRequest {
     std::string contentType;
     std::string contentLength;
     std::vector<char> body;
+    std::map<std::string, std::string> headers;
     int fd;
 
     HttpRequest()

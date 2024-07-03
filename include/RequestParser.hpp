@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:10:04 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/01 15:58:45 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/03 18:17:58 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #define REQUESTPARSER_HPP
 
 #include "Library.hpp"
+#include "llParser.hpp"
 
 class RequestParser
 {

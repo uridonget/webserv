@@ -27,8 +27,7 @@ int main(int ac, char *av[]) {
 		webserv.connectKqueueToServer();
 
 		webserv.runServers();
-		
-		
+
 	} catch (const RuntimeException& e) {
 		std::cerr << "Error : " << e.what() << std::endl;
 		return 1;

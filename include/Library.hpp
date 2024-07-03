@@ -33,8 +33,7 @@
 #define MAX_BODY_SIZE 30000000
 #define READ_END "\r\n\r\n"
 
-enum METHOD
-{
+enum METHOD {
     NONE = 1,
     GET = 2,
     POST = 3,
@@ -44,25 +43,25 @@ enum METHOD
     OPTION = 7,
 };
 
-enum REQUEST_STATE
-{
+enum REQUEST_STATE {
     REQUEST_START = 1,
     HEADER_END = 2,
     CONTENT_END = 3,
 };
 
 struct HttpRequest {
-    std::string method; // 일단 string으로 저장할 것. 나중에 enum METHOD로 바꾸는 일이 있을수도?
+    METHOD method; // 일단 string으로 저장할 것. 나중에 enum METHOD로 바꾸는 일이 있을수도?
     std::string url;
     std::string httpVersion;
     std::string host;
     std::string userAgent;
     std::string accept;
     std::string contentLength;
+    std::map<std::string, std::string> headers;
     std::vector<char> body;
 
     HttpRequest()
-        : method(""), 
+        : method(NONE), 
         url(""), 
         httpVersion(""), 
         host(""), 
@@ -70,6 +69,9 @@ struct HttpRequest {
         accept(""),
         contentLength("") {}
 };
+
+void	setNonblock(int fd);
+// std::string	readFile(const char* filename);
 
 class RuntimeException : public std::runtime_error {
 public:

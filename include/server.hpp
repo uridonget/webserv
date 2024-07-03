@@ -28,11 +28,17 @@ class Server {
 		Server();
 		~Server();
 
-		void initServer(ServerConfig & config);
+		ServerConfig getConfig();
+		int getServerFd() const;
 		size_t getListen();
-		int getServerFd();
 
-		void makeResponse(HttpRequest & request, Buffer * buffer); 
+		void initServer(ServerConfig & config);
+		bool findMatchingLocation(std::string & requestURL, Location & location);
+		void HttpRequestValidCheck(HttpRequest & request, int & code, std::string & message);
+		std::string makeErrorPage(int & code, std::string & message);
+		std::string makeBody(HttpRequest & request, int & code, std::string & message);
+		std::string makeHeader(HttpRequest & request, int & code, std::string & message, std::string & body);
+		void makeResponse(HttpRequest & request, Buffer * buffer);
 		// 파싱된 request 구조체 넣어주면 그걸로 response 만들어서 buffer에다가 넣기
 
 };

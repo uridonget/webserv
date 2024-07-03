@@ -12,12 +12,6 @@
 
 #include "../include/Webserv.hpp"
 
-void setNonblock(int fd) {
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		throw RuntimeException("fcntl");
-	}
-}
-
 int Webserv::isMessage(int bufferIdx) {
 	// Message 1
 	// File 2

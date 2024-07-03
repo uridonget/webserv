@@ -93,24 +93,17 @@ void Webserv::runServers()
 	int cnt = 0;
 	while (true)
 	{
-		// if (cnt == 20)
-		//	 std::exit(0);
 		int nev = kevent(kq, &changeList[0], changeList.size(), eventList, 10, &timeout);
-		// std::cout << "NUMBER OF EVENT : " << nev << std::endl;
-		if (nev < 0)
-		{
+		if (nev < 0) {
 			throw RuntimeException("kevent");
 		}
 		changeList.clear();
-		if (nev == 0)
-		{
+		if (nev == 0) {
 			std::cout << "NO EVENT" << std::endl;
 			continue;
 		}
 		for (int i = 0; i < nev; i++)
 		{
-			// printf("\n----filter : %d fflags : %x flags : %x ----\n\n", eventList[i].filter, eventList[i].fflags, eventList[i].flags);
-
 			int j = 0;
 			for (; j < bufferList.size(); j++) {
 				if (bufferList[j]->getFd() == eventList[i].ident) {
@@ -149,7 +142,7 @@ void Webserv::runServers()
 			{
 				int serverFd = serverFdSet.find(eventList[i].ident)->second;
 				std::cout << "----- server port : " << serverFd << " -----" << std::endl;
-				readEvent(i, j, serverFd); // 여기에 server_fd를 넣어줘야하는데 구할 방법이?
+				readEvent(i, j, serverFd);
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
 			{
@@ -283,18 +276,17 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
         std::cout << std::endl;
 
 		Buffer* buffer = bufferList[bufferIdx];
-		HttpRequest request = parser.requestParsing(buffer->getReadBuffer(), endIndex, endHeader);
-		// parser.printRequest(request);
+		llParser llparser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
+		HttpRequest request = llparser.parse();
+		parser.setBody(request, bufferList[bufferIdx]->getReadBuffer(), endHeader, endIndex);
 
 		serverList[serverFd].makeResponse(request, buffer);
 
         buffer->getReadBuffer().clear();
 		
 		struct kevent clientEvent;
-
 		EV_SET(&clientEvent, clientFd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		changeList.push_back(clientEvent);
-
 	}
 
 }
@@ -302,7 +294,6 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 	// std::cout << "****** write event ******" << std::endl;
 
-	// int clientFd = eventLis                 t[idx].ident;
 	// std::cout << "HTTP REQUEST" << std::endl;
 	// std::cout << bufferList[bufferIdx].getWriteBuffer().size() << std::endl;
 	// for (int i = 0; i < bufferList[bufferIdx].getWriteBuffer().size(); i++) {
@@ -338,7 +329,6 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 
 	// Message == 1
 	// 응답 보냈다는 뜻
-	std::cout << "Message sign" << isMessage(bufferIdx) << std::endl;
 	if (isMessage(bufferIdx) == 1) {
 
 		successResponse(bufferIdx);
@@ -354,29 +344,6 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 
 	// return;
 
-	//std::cout << "address : " << &(bufferList[bufferIdx]) << std::endl;
-	//std::string response = makeResponse();
-
-	// std::string response(bufferList[bufferIdx].getWriteBuffer().begin(), bufferList[bufferIdx].getWriteBuffer().end());
-	// std::cout << "CHECK!!!!!\n\n" << response << std::endl;
-	// int n = write(bufferList[bufferIdx].getFd(), response.c_str(), response.length());
-	
-	// if (n == -1)
-	// {
-	// 	if (close(bufferList[bufferIdx].getFd()) == -1)
-	// 		std::cout << "already closed fd!!!" << std::endl;
-	// 	bufferList.erase(bufferList.begin() + bufferIdx);
-	// 	struct kevent client_event;
-	// 	struct kevent client_event2;
-	// 	EV_SET(&client_event2, bufferList[bufferIdx].getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	// 	EV_SET(&client_event, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-	// 	changeList.push_back(client_event);
-	// 	changeList.push_back(client_event2);
-	// 	return ;
-	// }
-	// struct kevent client_event1;
-	// EV_SET(&client_event1, bufferList[bufferIdx].getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
-	// changeList.push_back(client_event1);
 }
 
 void Webserv::connectKqueueToServer() {

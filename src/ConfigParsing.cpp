@@ -26,7 +26,7 @@ void ConfigParsing::removeComment(std::string & fileInput) {
 }
 
 static bool isEmptyLine(std::string & line) {
-	for (int i=0; i < line.length(); i++) {
+	for (int i = 0; i < line.length(); i++) {
 		if (!(std::isspace(line[i]))) {
 			return false;
 		}
@@ -79,9 +79,11 @@ void ConfigParsing::insertServerConfig(int start, std::string &fileInput) {
 	throw RuntimeException("Invalid configuration file");
 }
 
+
+// ?????
 void ConfigParsing::splitServer(std::string & fileInput) {
 	while (1) {
-		int i=0;
+		int i = 0;
 		while (fileInput[i] && isspace(fileInput[i]))
 			i++;
 		if (i == fileInput.length())

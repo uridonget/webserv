@@ -36,7 +36,17 @@ class ServerConfig {
 
 		void parseConfig(const std::string& configStr);
 		void printConfig();
-		size_t getListen();
+		
+		size_t getListen() const;
+		std::string getServerName() const;
+		std::string getRoot() const;
+		std::string getIndex() const;
+		bool getAutoindex() const;
+		std::map<int, std::string> getErrorPages() const;
+		std::pair<int, std::string> getRedirection() const;
+		std::vector<Location> getLocationList() const;
+		std::set<METHOD> getAllowedMethods() const;
+		unsigned long getClientMaxBodySize() const;
 };
 
 #endif

@@ -20,6 +20,7 @@
 #include "Message.hpp"
 #include "File.hpp"
 #include "RequestParser.hpp"
+#include "Library.hpp"
 
 class Server;
 
@@ -62,7 +63,5 @@ class Webserv {
 		void successFileWrite(int bufferIdx);
 
 };
-
-void setNonblock(int fd);
 
 #endif

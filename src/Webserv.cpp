@@ -134,9 +134,9 @@ void Webserv::runServers()
 				delete bufferList[j];
 				bufferList.erase(bufferList.begin() + j);
 				close(eventList[i].ident);
-				struct kevent client_event;
-				EV_SET(&client_event, eventList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-				changeList.push_back(client_event);
+				struct kevent clientEvent;
+				EV_SET(&clientEvent, eventList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+				changeList.push_back(clientEvent);
 				std::cout << "EOF" << std::endl;
 				continue;
 			}
@@ -176,10 +176,10 @@ void Webserv::newClient(int serverFd) {
 	} else {
 		serverFdSet.insert(std::make_pair(clientFd, serverFd));
 		setNonblock(clientFd);
-		struct kevent client_event;
-		EV_SET(&client_event, clientFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		struct kevent clientEvent;
+		EV_SET(&clientEvent, clientFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		// std::cout << "---- new client added " << client_fd << " ----" << std::endl;
-		changeList.push_back(client_event);
+		changeList.push_back(clientEvent);
 
 		Buffer* newClient = new Message(clientFd);
 		bufferList.push_back(newClient);
@@ -244,19 +244,19 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 	}
 
 	// EOF NO
-	int client_fd = eventList[idx].ident; 
+	int clientFd = eventList[idx].ident; 
 
 	char buf[BUFFER_SIZE] = {0};
-	int n = read(client_fd, buf, BUFFER_SIZE);
+	int n = read(clientFd, buf, BUFFER_SIZE);
 	// 예외처리
 	if (n == -1)
 	{
 		delete bufferList[bufferIdx];
 		bufferList.erase(bufferList.begin() + bufferIdx);
-		close(client_fd);
-		struct kevent client_event;
-		EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		changeList.push_back(client_event);
+		close(clientFd);
+		struct kevent clientEvent;
+		EV_SET(&clientEvent, clientFd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		changeList.push_back(clientEvent);
 		return ;
 	}
 
@@ -290,10 +290,10 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 
         buffer->getReadBuffer().clear();
 		
-		struct kevent client_event;
+		struct kevent clientEvent;
 
-		EV_SET(&client_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		changeList.push_back(client_event);
+		EV_SET(&clientEvent, clientFd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		changeList.push_back(clientEvent);
 
 	}
 

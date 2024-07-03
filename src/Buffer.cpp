@@ -46,3 +46,10 @@ std::vector<char>& Buffer::getReadBuffer() {
 std::vector<char>& Buffer::getWriteBuffer() {
 	return this->writeBuffer;
 }
+std::vector<char>::iterator Buffer::getWriteIt() const {
+	return this->writeIt;
+}
+
+void Buffer::setWriteIt(std::vector<char>::iterator it) {
+	this->writeIt = it;
+}

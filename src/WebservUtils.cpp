@@ -25,12 +25,12 @@ int Webserv::isMessage(int bufferIdx) {
 }
 
 void Webserv::closeSocket(int bufferIdx) {
-	struct kevent clientEvent;
-	EV_SET(&clientEvent, bufferList[bufferIdx]->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	changeList.push_back(clientEvent);
 	struct kevent clientEvent1;
-	EV_SET(&clientEvent1, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+	EV_SET(&clientEvent1, bufferList[bufferIdx]->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	changeList.push_back(clientEvent1);
+	struct kevent clientEvent2;
+	EV_SET(&clientEvent2, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+	changeList.push_back(clientEvent2);
 	close(bufferList[bufferIdx]->getFd());
 	delete bufferList[bufferIdx];
 	bufferList.erase(bufferList.begin() + bufferIdx);

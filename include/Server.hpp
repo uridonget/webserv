@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 17:08:38 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/04 17:17:29 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ class Server {
 		void afterProcessRequest(Buffer *file, struct kevent &change);
 		Buffer *processRequest(Buffer *client, HttpRequest &request, struct kevent &change); 
 		std::string makeResponse(HttpRequest &request, int code, Buffer *buffer);
-		void initServer(ServerConfig & config);
+		void initServer(ServerConfig & config);œ
 		bool findMatchingLocation(std::string & requestURL, Location & location);
 		void HttpRequestValidCheck(HttpRequest & request, int & code, std::string & message);
 		std::string makeErrorPage(int & code, std::string & message);

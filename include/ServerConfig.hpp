@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:23:48 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 11:36:29 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/04 16:53:20 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,6 @@ class ServerConfig {
 
 		void parseConfig(const std::string& configStr);
 		void printConfig();
-		
 		size_t getListen() const;
 		std::string getServerName() const;
 		std::string getRoot() const;

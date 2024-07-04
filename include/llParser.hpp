@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:37:19 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/03 18:13:46 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/04 17:05:49 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ const char SP = ' ';
 
 class llParser{
 	public:
-		llParser(std::vector<char> buffer, size_t endHeader);
+		llParser(std::vector<char> &buffer, size_t endHeader);
 		HttpRequest parse();
 
 	private:

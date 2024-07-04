@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:08:20 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/04 17:41:11 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:16:48 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ public:
     ParseException(const std::string &msg) : std::runtime_error(msg) {}
 };
 
-llParser::llParser(std::vector<char> buffer, size_t endHeader) : stream(std::string(buffer.begin(), buffer.begin() + endHeader + 4)), currentChar(NULL_CHAR)
+llParser::llParser(std::vector<char> &buffer, size_t endHeader) : stream(std::string(buffer.begin(), buffer.begin() + endHeader + 4)), currentChar(NULL_CHAR)
 {
     nextChar();
 }

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:31:23 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 15:48:44 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:21:24 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ void ServerConfig::parseConfig(const std::string& configString) {
 			inLocationBlock = true;
 		}
 		else if (tokens[0] == "root") {
-			if (tokens.size() != 2 || !checkSemiColon(tokens))
+			if (tokens.size() < 2 || !checkSemiColon(tokens))
 				throw RuntimeException("invalid root in configuration file");
 			if (inLocationBlock) {
 				currentLocation.setRoot(tokens[1]);

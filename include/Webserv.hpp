@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   webserv.hpp                                        :+:      :+:    :+:   */
+/*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/03 16:23:20 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/04 15:48:08 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ class Webserv {
 		ConfigParsing						configParsing; // configuration file parsing
 		std::map<int, Server> 				serverList; // <port, Server>
 		// std::set<int> serverFdSet;
-		std::map<int, int> serverFdSet; // <Client fd, Server fd> serverFdMap
+		std::map<int, int> 					serverFdSet; // <Client fd, Server fd> serverFdMap
 		int kq;
 		std::vector<struct kevent> changeList;
 		struct kevent eventList[10];
@@ -50,7 +50,6 @@ class Webserv {
 		int checkNewClient(uintptr_t enventIdent);
 
 		void newClient(int serverFd);
-		std::string makeResponse();
 		void readEvent(int idx, int bufferIdx, int serverFd);
 		void writeEvent(int idx, int bufferIdx, int serverFd);
 

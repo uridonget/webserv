@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/03 18:26:26 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/03 20:12:25 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,16 @@
 #include "Buffer.hpp"
 #include "File.hpp"
 #include "Message.hpp"
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
 
 class Server {
 	private:
-		ServerConfig 					config;
-		int								serverFd;
-		struct sockaddr_in 				serverAddr;
-		std::map<File*, HttpRequest>	requestList;
+		ServerConfig 										config;
+		int													serverFd;
+		struct sockaddr_in 									serverAddr;
+		std::map<Buffer*, std::pair<Buffer*, HttpRequest> >	requestList;
 		
 	public:
 		Server();
@@ -34,9 +37,10 @@ class Server {
 		size_t getListen();
 		int getServerFd();
 
-		Message *afterProcessRequest(File &file);
-		File *processRequest(HttpRequest &request); 
-		std::string makeResponse(HttpRequest &request, Buffer *buffer);
+		
+		void afterProcessRequest(Buffer *file, struct kevent &change);
+		Buffer *processRequest(Buffer *client, HttpRequest &request, struct kevent &change); 
+		std::string makeResponse(HttpRequest &request, int code, Buffer *buffer);
 		// 파싱된 request 구조체 넣어주면 그걸로 response 만들어서 buffer에다가 넣기
 
 };

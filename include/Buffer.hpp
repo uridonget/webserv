@@ -21,6 +21,7 @@ class Buffer {
 		int fd;
 		std::vector<char> readBuffer;
 		std::vector<char> writeBuffer;
+		std::vector<char>::iterator writeIt;
 
 	public:
 		Buffer(int fd);
@@ -33,6 +34,8 @@ class Buffer {
 		int getFd() const;
 		std::vector<char>& getReadBuffer();
 		std::vector<char>& getWriteBuffer();
+		std::vector<char>::iterator getWriteIt() const;
+		void setWriteIt(std::vector<char>::iterator it);
 
 
 };

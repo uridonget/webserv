@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:37:19 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/03 18:28:42 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/04 17:05:49 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,26 +47,25 @@ const char SP = ' ';
  * vchar = CHAR
 */
 
-class llParser
-{
-public:
-    llParser(std::vector<char> &buffer, size_t endHeader);
-    HttpRequest parse();
+class llParser{
+	public:
+		llParser(std::vector<char> &buffer, size_t endHeader);
+		HttpRequest parse();
 
-private:
-    std::istringstream stream;
-    char currentChar;
+	private:
+		std::istringstream stream;
+		char currentChar;
 
-    llParser() {};
-    void nextChar();
-    void consumeSP();
-    void consumeCRLF();
-    std::string parseToken();
-    std::pair<std::string, std::string> fieldline();
-    std::string parseFieldName();
-    std::string parseFieldValue();
-    void consumeOWS();
-    void expect(char expected);
+		llParser() {};
+		void nextChar();
+		void consumeSP();
+		void consumeCRLF();
+		std::string parseToken();
+		std::pair<std::string, std::string> fieldline();
+		std::string parseFieldName();
+		std::string parseFieldValue();
+		void consumeOWS();
+		void expect(char expected);
 };
 
 #endif

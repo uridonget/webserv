@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:08:20 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/03 18:28:52 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/04 16:53:32 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,20 +25,33 @@ llParser::llParser(std::vector<char> &buffer, size_t endHeader) : stream(std::st
 
 HttpRequest llParser::parse()
 {
-    HttpRequest request;
-    request.method = parseToken();
-    consumeSP();
-    request.url = parseToken();
-    consumeSP();
-    request.httpVersion = parseToken();
-    consumeCRLF();
-    while (currentChar != NULL_CHAR && currentChar != CR)
-    {
-        std::pair<std::string, std::string> header = fieldline();
-        request.headers[header.first] = header.second;
-    }
+	HttpRequest request;
+	std::string method = parseToken();
+	if (method == "GET") {
+		request.method = GET;
+	}
+	else if (method == "POST") {
+		request.method = POST;
+	}
+	else if (method == "DELETE") {
+		request.method = DELETE;
+	}
+	consumeSP();
+	request.url = parseToken();
+	consumeSP();
+	request.httpVersion = parseToken();
+	consumeCRLF();
+	while (currentChar != NULL_CHAR && currentChar != CR)
+	{
+		std::pair<std::string, std::string> header = fieldline();
+		request.headers[header.first] = header.second;
+	}
     consumeCRLF();
     expect('\0');
+    if (request.headers.find("Host") != request.headers.end())
+    {
+        request.host = request.headers["Host"];
+    }
     if (request.headers.find("User-Agent") != request.headers.end())
     {
         request.userAgent = request.headers["User-Agent"];
@@ -49,7 +62,7 @@ HttpRequest llParser::parse()
     }
     if (request.headers.find("Content-Length") != request.headers.end())
     {
-        request.userAgent = request.headers["Content-Length"];
+        request.contentLength = request.headers["Content-Length"];
     }
     return request;
 }
@@ -97,17 +110,17 @@ void llParser::consumeCRLF()
 
 std::string llParser::parseToken()
 {
-    std::string token;
-    while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != SP && currentChar != '\t')
-    {
-        token += currentChar;
-        nextChar();
-    }
-    if (token.size() == 0)
-    {
-        throw ParseException("Expected token");
-    }
-    return token;
+	std::string token;
+	while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != SP && currentChar != '\t')
+	{
+		token += currentChar;
+		nextChar();
+	}
+	if (token.size() == 0)
+	{
+		throw ParseException("Expected token");
+	}
+	return token;
 }
 
 std::pair<std::string, std::string> llParser::fieldline()
@@ -153,8 +166,8 @@ void llParser::consumeOWS()
 
 void llParser::expect(char expected)
 {
-    if (currentChar != expected)
-    {
-        throw ParseException(std::string("Expected '") + expected + "' but found '" + currentChar + "'");
-    }
+	if (currentChar != expected)
+	{
+		throw ParseException(std::string("Expected '") + expected + "' but found '" + currentChar + "'");
+	}
 }

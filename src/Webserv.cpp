@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 15:52:29 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/04 16:58:12 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,14 +101,11 @@ void Webserv::runServers()
 	while (true)
 	{
 		int nev = kevent(kq, &changeList[0], changeList.size(), eventList, 10, &timeout);
-		// std::cout << "NUMBER OF EVENT : " << nev << std::endl;
-		if (nev < 0)
-		{
+		if (nev < 0) {
 			throw RuntimeException("kevent");
 		}
 		changeList.clear();
-		if (nev == 0)
-		{
+		if (nev == 0) {
 			std::cout << "NO EVENT" << std::endl;
 			continue;
 		}
@@ -214,18 +211,18 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd)
 	}
 
 	// EOF NO
-	int client_fd = eventList[idx].ident; 
+	int clientFd = eventList[idx].ident; 
 	char buf[BUFFER_SIZE] = {0};
-	int n = read(client_fd, buf, BUFFER_SIZE);
+	int n = read(clientFd, buf, BUFFER_SIZE);
 	// 예외처리
 	if (n == -1)
 	{
 		delete bufferList[bufferIdx];
 		bufferList.erase(bufferList.begin() + bufferIdx);
-		close(client_fd);
-		struct kevent client_event;
-		EV_SET(&client_event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		changeList.push_back(client_event);
+		close(clientFd);
+		struct kevent clientEvent;
+		EV_SET(&clientEvent, clientFd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		changeList.push_back(clientEvent);
 		return ;
 	}
 
@@ -313,7 +310,6 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd)
 
 	// Message == 1
 	// 응답 보냈다는 뜻
-	std::cout << "Message sign" << isMessage(bufferIdx) << std::endl;
 	if (isMessage(bufferIdx) == 1) {
 
 		successResponse(bufferIdx);

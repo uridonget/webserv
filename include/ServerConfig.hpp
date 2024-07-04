@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:23:48 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/03 17:59:51 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/04 16:53:20 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,16 @@ class ServerConfig {
 
 		void parseConfig(const std::string& configStr);
 		void printConfig();
-		size_t getListen();
-		const std::string &getRoot() const;
+		size_t getListen() const;
+		std::string getServerName() const;
+		std::string getRoot() const;
+		std::string getIndex() const;
+		bool getAutoindex() const;
+		std::map<int, std::string> getErrorPages() const;
+		std::pair<int, std::string> getRedirection() const;
+		std::vector<Location> getLocationList() const;
+		std::set<METHOD> getAllowedMethods() const;
+		unsigned long getClientMaxBodySize() const;
 };
 
 #endif

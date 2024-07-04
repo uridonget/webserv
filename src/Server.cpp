@@ -6,19 +6,23 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 17:09:09 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/04 17:19:39 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 #include "../include/Library.hpp"
 
-Server::Server() : serverFd(0) {
-	// std::cout << "Server default constructor called" << std::endl;
+Server::Server() : serverFd(0) {}
+
+Server::~Server() {}
+
+ServerConfig Server::getConfig() {
+    return config;
 }
 
-Server::~Server() {
-	// std::cout << "Server destructor called" << std::endl;
+int Server::getServerFd() const{
+	return serverFd;
 }
 
 void Server::initServer(ServerConfig & config) {
@@ -27,39 +31,20 @@ void Server::initServer(ServerConfig & config) {
 	if (serverFd < 0) {
 		throw RuntimeException("socket");
 	}
-
-	setNonblock(serverFd);
-		
+	setNonblock(serverFd);	
 	int opt = 1;
 	if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
 		throw RuntimeException("setsockopt");
 	}
-		
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
-	serverAddr.sin_port = htons(this->getListen());
-
-	std::cout << "PORT : " << this->getListen() << std::endl;
-		
+	serverAddr.sin_port = htons(config.getListen());
 	if (bind(serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
 		throw RuntimeException("bind");
-	}
-		
+	}	
 	if (listen(serverFd, 10) < 0) {
 		throw RuntimeException("listen");
 	}
-}
-
-ServerConfig Server::getConfig() {
-    return this->config;
-}
-
-size_t Server::getListen() {
-	return config.getListen();
-}
-
-int Server::getServerFd() const{
-	return this->serverFd;
 }
 
 std::string readFromPipe(int pipeFd) {
@@ -70,7 +55,6 @@ std::string readFromPipe(int pipeFd) {
     while (true) {
         ssize_t bytesRead = read(pipeFd, buffer.data(), bufferSize);
         if (bytesRead < 0) {
-            perror("read");
             break;
         }
         if (bytesRead == 0) {
@@ -82,23 +66,20 @@ std::string readFromPipe(int pipeFd) {
     return (result);
 }
 
-bool Server::findMatchingLocation(std::string & requestURL, Location & location) {
-    std::vector<Location> locationList = config.getLocationList();
-    bool res = false;
-    for (std::vector<Location>::const_iterator it = locationList.begin(); it != locationList.end(); ++it) {
-        const std::string &locPath = it->getPath();
-        if (requestURL.compare(0, locPath.length(), locPath) == 0) {
-            if (locPath.length() <= location.getPath().length()) {
-                location = *it;
-                res = true;
-                std::cout << "MATCH!" << std::endl;
-                std::cout << "url  : " << requestURL << std::endl;
-                std::cout << "path : " << locPath << std::endl;
-            }
-        }
-    }
-    return res;
-}
+// bool Server::findMatchingLocation(std::string & requestURL, Location & location) {
+//     std::vector<Location> locationList = config.getLocationList();
+//     bool res = false;
+//     for (std::vector<Location>::const_iterator it = locationList.begin(); it != locationList.end(); ++it) {
+//         const std::string &locPath = it->getPath();
+//         if (requestURL.compare(0, locPath.length(), locPath) == 0) {
+//             if (locPath.length() <= location.getPath().length()) {
+//                 location = *it;
+//                 res = true;
+//             }
+//         }
+//     }
+//     return res;
+// }
 
 void Server::HttpRequestValidCheck(HttpRequest & request, int & code, std::string & message) {
     if (request.method == NONE) {
@@ -111,33 +92,11 @@ void Server::HttpRequestValidCheck(HttpRequest & request, int & code, std::strin
         message = "Bad Request: URL is missing.";
         return;
     }
-    // 여기에 들어가야만 해...
-    // 1. 해당하는 location이 있기는 한지
-    // 2. 있다면 레퍼런스로 받아서 값을 담아줘
-    Location location;
-    bool matchLocation = findMatchingLocation(request.url, location);
-    if (matchLocation) {
-        std::cout << "LOCATION SIDE\n";
-        std::set<METHOD> allowedMethod = location.getAllowedMethods();
-        for (std::set<METHOD>::iterator it = allowedMethod.begin(); it != allowedMethod.end(); it++) {
-            std::cout << "CHECK!! : " << *it << std::endl;
-        }
-        if (allowedMethod.size() && allowedMethod.find(request.method) == allowedMethod.end()) {
-            code = 405;
-            message = "Method Not Allowed: Invalid HTTP method.";
-            return;    
-        }
-    } else {
-        std::set<METHOD> allowedMethod = location.getAllowedMethods();
-        std::cout << "SERVER SIDE\n";
-        for (std::set<METHOD>::iterator it = allowedMethod.begin(); it != allowedMethod.end(); it++) {
-            std::cout << "CHECK!! : " << *it << std::endl;
-        }
-        if (allowedMethod.size() && allowedMethod.find(request.method) == allowedMethod.end()) {
-            code = 405;
-            message = "Method Not Allowed: Invalid HTTP method.";
-            return; 
-        }
+    std::set<METHOD> allowedMethod = config.getAllowedMethods();
+    if (allowedMethod.size() && allowedMethod.find(request.method) == allowedMethod.end()) {
+        code = 405;
+        message = "Method Not Allowed: Invalid HTTP method.";
+        return; 
     }
     if (request.httpVersion != "HTTP/1.1") {
         code = 400;
@@ -231,6 +190,7 @@ std::string Server::makeBody(HttpRequest & request, int & code, std::string & me
         char *envp[1];
         envp[0] = 0;
         execve(fileName.c_str(), exec_args.data(), envp);
+        perror("execve");
         throw RuntimeException("execve");
     } else {
         int status;
@@ -253,7 +213,6 @@ std::string Server::makeBody(HttpRequest & request, int & code, std::string & me
 
 std::string Server::makeHeader(HttpRequest & request, int & code, std::string & message, std::string & body) {
     std::ostringstream oss;
-    // 위의 결과에 따라서 (Body 생성) Header도 적응형으로 생성하기
     oss << request.httpVersion << " " << code << " " << message << "\r\n";
     oss << "Content-Type: text/html\r\n";
     oss << "Content-Length: " << body.size() << "\r\n";
@@ -272,6 +231,6 @@ void Server::makeResponse(HttpRequest & request, Buffer * buffer) {
     response << makeHeader(request, code, message, body);
     response << body;
     std::string responseStr = response.str();
-    // std::cout << "\n<RESPONSE>\n" << responseStr << std::endl;
+    std::cout << "\n<RESPONSE>\n" << responseStr << std::endl;
 	buffer->getWriteBuffer().insert(buffer->getWriteBuffer().end(), responseStr.begin(), responseStr.end());
 }

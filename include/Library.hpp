@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Library.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/03 18:15:13 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/04 16:39:57 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ enum REQUEST_STATE {
 };
 
 struct HttpRequest {
-    METHOD method; // 일단 string으로 저장할 것. 나중에 enum METHOD로 바꾸는 일이 있을수도?
+    METHOD      method;
     std::string url;
     std::string httpVersion;
     std::string host;
@@ -61,7 +61,7 @@ struct HttpRequest {
     std::vector<char> body;
 
     HttpRequest()
-        : method(NONE), 
+        : method(NONE),
         url(""), 
         httpVersion(""), 
         host(""), 

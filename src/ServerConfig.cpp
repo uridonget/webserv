@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:31:23 by haejeong          #+#    #+#             */
-/*   Updated: 2024/06/28 13:34:49 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/04 15:48:44 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,7 +200,7 @@ void ServerConfig::printConfig() {
 }
 
 size_t ServerConfig::getListen() const {
-    return (this->listen);
+    return listen;
 }
 
 std::string ServerConfig::getServerName() const {

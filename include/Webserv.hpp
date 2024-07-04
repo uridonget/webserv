@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/01 15:46:43 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/04 16:55:27 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,12 @@ class Server;
 
 class Webserv {
 	private:
+		Webserv(const Webserv & other);
+		Webserv & operator=(const Webserv & other);
+		
 		ConfigParsing						configParsing; // configuration file parsing
-		std::map<int, Server> 				serverList; // <port, Server>
-		// std::set<int> serverFdSet;
-		std::map<int, int> serverFdSet; // <Client fd, Server fd> serverFdMap
+		std::map<int, Server> 				serverList;    // <port, Server>
+		std::map<int, int> serverFdMap; 				   // <Client fd, Server fd>
 		int kq;
 		std::vector<struct kevent> changeList;
 		struct kevent eventList[10];
@@ -38,22 +40,21 @@ class Webserv {
 	public:
 		Webserv();
 		~Webserv();
-
-		void makeServerConfigStringList(const std::string & configPath);
-		std::vector<ServerConfig> getServerConfigs();
-		void makeServerList();
-		void initKqueue();
-		void connectKqueueToServer();
-
-		bool checkSocketError(int idx, int bufferIdx);
-		void runServers();
 		
-		int checkNewClient(uintptr_t enventIdent);
+		void configurationParsing(const std::string & configPath);
+		void initKqueue();
+		void makeServerList();
+		void registerServerWithChangeList();
 
+		bool checkSocketError(int idx);
+		int	checkNewClient(uintptr_t enventIdent);
 		void newClient(int serverFd);
-		std::string makeResponse();
 		void readEvent(int idx, int bufferIdx, int serverFd);
 		void writeEvent(int idx, int bufferIdx, int serverFd);
+		void runServers();
+		
+		std::string makeResponse();
+		
 
 		// websev utils
 		int isMessage(int bufferIdx);

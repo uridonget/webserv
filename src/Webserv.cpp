@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 18:43:18 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/05 15:37:39 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,40 +16,6 @@
 Webserv::Webserv() : kq(0) {}
 
 Webserv::~Webserv() {}
-
-void Webserv::closeSocket(int bufferIdx) {
-	struct kevent clientEvent1;
-	EV_SET(&clientEvent1, bufferList[bufferIdx]->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	changeList.push_back(clientEvent1);
-	struct kevent clientEvent2;
-	EV_SET(&clientEvent2, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-	changeList.push_back(clientEvent2);
-	close(bufferList[bufferIdx]->getFd());
-	delete bufferList[bufferIdx];
-	bufferList.erase(bufferList.begin() + bufferIdx);
-}
-
-void Webserv::closeFile(int bufferIdx) {
-	struct kevent fileEvent;
-	EV_SET(&fileEvent, bufferList[bufferIdx]->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	changeList.push_back(fileEvent);
-	close(bufferList[bufferIdx]->getFd());
-}
-
-void Webserv::successResponse(int bufferIdx) {
-	struct kevent clientEvent;
-	EV_SET(&clientEvent, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
-	changeList.push_back(clientEvent);
-}
-
-void Webserv::successFileWrite(int bufferIdx) {
-	struct kevent clientEvent;
-	EV_SET(&clientEvent, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
-	changeList.push_back(clientEvent);
-	delete bufferList[bufferIdx];
-	bufferList.erase(bufferList.begin() + bufferIdx);
-	close(bufferList[bufferIdx]->getFd());
-}
 
 void Webserv::configurationParsing(const std::string & configPath) {
 	std::ifstream configFile(configPath.c_str());
@@ -101,13 +67,12 @@ int Webserv::checkNewClient(uintptr_t eventIdent) {
 			}
 		}
 	}
-	return static_cast<int>(eventIdent);
+	return eventIdent;
 }
 
 bool Webserv::checkSocketError(int idx) {
 	if (eventList[idx].flags & EV_ERROR) {
-		std::cout << "EV_ERROR" << std::endl;
-		if (checkNewClient(eventList[idx].ident)) {
+		if (checkNewClient(eventList[idx].ident) != -1) {
 			throw RuntimeException("server socket");
 		} else {
 			return true ;
@@ -117,11 +82,8 @@ bool Webserv::checkSocketError(int idx) {
 }
 
 void Webserv::newClient(int serverFd) {
-	std::cout << "WHAT IS THE SERVER FD : " << serverFd << std::endl;
 	int clientFd = accept(serverFd, NULL, NULL);
 	if (clientFd < 0) {
-		std::cout << "serecrFD : " << serverFd<< std::endl;
-		system("lsof -c webserv");
 		perror("accept");
 		throw RuntimeException("accept");
 	} else {
@@ -133,12 +95,6 @@ void Webserv::newClient(int serverFd) {
 		Buffer* newClient = new Message(clientFd);
 		bufferList.push_back(newClient);
 	}
-}
-
-int Webserv::isMessage(int bufferIdx) {
-	// 1 : message
-	// 2 : file
-	return bufferList[bufferIdx]->whoAmI();
 }
 
 void printHttpRequest(const HttpRequest& request) {
@@ -181,32 +137,30 @@ void printHttpRequest(const HttpRequest& request) {
 
 void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 	std::cout << "****** read event ******" << std::endl;
-	if (eventList[idx].flags & EV_EOF) {
-		if (isMessage(bufferIdx) == 1) { // message EOF
+	if (eventList[idx].flags & EV_EOF) { // EOF
+		if (isMessage(bufferIdx) == 1) { // message EOF : something wrong
 			closeSocket(bufferIdx);
+			return ;
 		}
 		// File == 2
-		else if (isMessage(bufferIdx) == 2) {
-			// 여기는 파일 다 읽어서 클라이언트로 보낸다는거임
-			std::cout << "file read end!" << std::endl;
-			closeFile(bufferIdx);
+		else if (isMessage(bufferIdx) == 2) { // 여기는 파일 다 읽어서 클라이언트로 보낸다는거임
+			std::cout << "FILE read end!" << std::endl;
+			closeFile(bufferIdx); // 파일 fd 닫고
 			std::map<int, Server>::iterator server = serverList.find(serverFd);
-			if (server != serverList.end())
-			{
-       			struct kevent client_event;
-				server->second.afterProcessRequest(bufferList[bufferIdx], client_event);
+			if (server != serverList.end()) { // server를 serverList에서 찾았을 때
+       			struct kevent clientEvent;
+				server->second.afterProcessRequest(bufferList[bufferIdx], clientEvent);
 				serverFdMap.erase(bufferList[bufferIdx]->getFd());
-				delete dynamic_cast<File *>(bufferList[bufferIdx]);
+				// delete dynamic_cast<File *>(bufferList[bufferIdx]); // 왜 있는거지??
+				delete bufferList[bufferIdx];
 				bufferList.erase(bufferList.begin() + bufferIdx);
-				changeList.push_back(client_event);
+				changeList.push_back(clientEvent);
 			}
 			return ;
 		}
-		return ;
 	}
-
 	// EOF NO
-	int clientFd = eventList[idx].ident; 
+	int clientFd = eventList[idx].ident;
 	char buf[BUFFER_SIZE] = {0};
 	int n = read(clientFd, buf, BUFFER_SIZE);
 	if (n < 0) {
@@ -218,9 +172,12 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 		changeList.push_back(clientEvent);
 		return ;
 	}
-
-	// File == 2
-	if (isMessage(bufferIdx) == 2) {
+	if (isMessage(bufferIdx) == 2) { // File
+		std::cout << "READ : ";
+		for (int i = 0; i < n; i++) {
+			std::cout << buf[i];
+		}
+		std::cout << std::endl;
 		bufferList[bufferIdx]->getReadBuffer().insert(bufferList[bufferIdx]->getReadBuffer().end(), buf, buf + n);
 		if (n != BUFFER_SIZE || n == 0)
 		{
@@ -236,32 +193,31 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 				changeList.push_back(client_event);
 			}
 		}
-		// 파일을 덜 읽었다는 뜻임
 		return ;
 	}
-
 	// Message == 1
-	// 여기서 쭉쭉 내려가면 됨
 	RequestParser parser;
 	size_t endHeader;
 	size_t endIndex = parser.checkEnd(bufferList[bufferIdx]->getReadBuffer(), buf, n, endHeader);
     if (endIndex != RequestParser::npos)
     {
+		std::cout << "MESSAGE read end!" << std::endl;
 		Buffer *buffer = bufferList[bufferIdx];
 		llParser parser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
 		try{
-			HttpRequest request = parser.parse();
+			HttpRequest request = parser.parse(); // 파싱 완료
+			printHttpRequest(request);
 			std::map<int, Server>::iterator server = serverList.find(serverFd);
 			if (server != serverList.end())
 			{
-       			struct kevent client_event;
-				Buffer *file = server->second.processRequest(bufferList[bufferIdx], request, client_event);
+       			struct kevent clientEvent;
+				Buffer *file = server->second.processRequest(bufferList[bufferIdx], request, clientEvent);
 				if (file)
 				{
 					bufferList.push_back(file);
 					serverFdMap[file->getFd()] = serverFd;
 				}
-				changeList.push_back(client_event);
+				changeList.push_back(clientEvent);
 			}
 		}
 		catch (const std::runtime_error &e)
@@ -276,10 +232,11 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 
 void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) 
 {
-	// 일단 write하셈 ㅋㅋ
+	std::cout << "<RESPONSE>" << std::endl;
+	std::string response(bufferList[bufferIdx]->getWriteBuffer().begin(), bufferList[bufferIdx]->getWriteBuffer().end());
+	std::cout << response << std::endl;
 	int writeSize = write(bufferList[bufferIdx]->getFd(), bufferList[bufferIdx]->getWriteBuffer().data(), bufferList[bufferIdx]->getWriteBuffer().size());
-	if (writeSize == -1)
-	{
+	if (writeSize < 0) {
 		if (close(bufferList[bufferIdx]->getFd()) == -1)
 			std::cout << "already closed fd!!!" << std::endl;
 		delete bufferList[bufferIdx];
@@ -295,15 +252,18 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd)
 	if (writeSize != bufferList[bufferIdx]->getWriteBuffer().size()){
 		// 여기서 사이즈가 서로 다르다는건 버퍼 사이즈 한계로 다 못 썼다는 것
 		// 이터레이터로 어디까지 썼는지 알고 있어야 함
+		bufferList[bufferIdx]->getWriteBuffer().erase(bufferList[bufferIdx]->getWriteBuffer().begin(), bufferList[bufferIdx]->getWriteBuffer().begin() + writeSize);
 		return ;
 	}
 	if (isMessage(bufferIdx) == 1) {
 		// 메시지 전송 성공
+		bufferList[bufferIdx]->getWriteBuffer().clear();
 		successResponse(bufferIdx);
 		return ;
 	}
 	if (isMessage(bufferIdx) == 2) {
 		// 파일 전송 성공
+		bufferList[bufferIdx]->getWriteBuffer().clear();
 		successFileWrite(bufferIdx);
 		return ;
 	}
@@ -325,6 +285,12 @@ void Webserv::runServers() {
 			continue;
 		}
 		for (int i=0; i < nev; i++) {
+			// if (checkSocketError(i)) {
+			// 	continue;
+			// }
+			if (eventList[i].flags & EV_DELETE) {
+				continue;
+			}
 			int isNew = checkNewClient(eventList[i].ident);
 			if (isNew > 0) {
 				newClient(eventList[i].ident);
@@ -336,31 +302,13 @@ void Webserv::runServers() {
 					break;
 				}
 			}
-			if (checkSocketError(i)) {
-				continue;
-			}
-			if (eventList[i].flags & EV_DELETE) {
-				continue;
-			} else if (eventList[i].flags & EV_EOF) {
-				delete bufferList[j];
-				bufferList.erase(bufferList.begin() + j);
-				close(eventList[i].ident);
-				// struct kevent clientEvent;
-				// EV_SET(&clientEvent, eventList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-				// changeList.push_back(clientEvent);
-				continue;
-			} else if (eventList[i].filter == EVFILT_READ) {
+			if (eventList[i].filter == EVFILT_READ) {
 				int serverFd = serverFdMap.find(eventList[i].ident)->second;
-				// std::cout << "----- server port : " << serverFd << " -----" << std::endl;
 				readEvent(i, j, serverFd);
 			} else if (eventList[i].filter == EVFILT_WRITE) {
 				int serverFd = serverFdMap.find(eventList[i].ident)->second;
-				// std::cout << "----- server port : " << serverFd << " -----" << std::endl;
 				writeEvent(i, j, serverFd);
 			}
 		}
 	}
 }
-
-
-

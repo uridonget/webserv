@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:08:20 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/04 18:16:48 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/05 12:33:42 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ HttpRequest llParser::parse()
 {
 	HttpRequest request;
 	std::string method = parseToken();
-    std::cout << "METHOD!!!!!!!!!!!!!!!!!!! " << method << std::endl;
 	if (method == "GET") {
 		request.method = GET;
 	}

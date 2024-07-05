@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 18:16:45 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/05 12:59:42 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ class Webserv {
 		Webserv & operator=(const Webserv & other);
 		
 		ConfigParsing						configParsing; // configuration file parsing
-		std::map<int, Server> 				serverList;    // <port, Server>
+		std::map<int, Server> 				serverList;    // <Server fd, Server>
 		std::map<int, int> serverFdMap; 				   // <Client fd, Server fd>
 		int kq;
 		std::vector<struct kevent> changeList;
@@ -52,9 +52,6 @@ class Webserv {
 		void readEvent(int idx, int bufferIdx, int serverFd);
 		void writeEvent(int idx, int bufferIdx, int serverFd);
 		void runServers();
-		
-		std::string makeResponse();
-		
 
 		// websev utils
 		int isMessage(int bufferIdx);

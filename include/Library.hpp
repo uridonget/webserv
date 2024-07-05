@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 18:16:40 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/05 18:49:36 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,15 @@
 #define BUFFER_SIZE 1000
 #define MAX_BODY_SIZE 30000000
 #define READ_END "\r\n\r\n"
+
+#define ERR400 "Bad Request"
+#define ERR403 "Forbidden"
+#define ERR404 "Not Found"
+#define ERR405 "Method Not Allowed"
+#define ERR408 "Request Timeout"
+#define ERR411 "Length Required"
+#define ERR413 "Payload Too Large"
+#define ERR415 "Unsupported Media Type"
 
 enum METHOD {
     NONE = 1,

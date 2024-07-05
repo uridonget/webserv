@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/05 15:15:41 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/05 19:43:29 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,70 +58,118 @@ void Server::afterProcessRequest(Buffer *file, struct kevent &change)
         std::string header = makeHeader(it->second.second, code, message, body);
         res->getWriteBuffer().insert(res->getWriteBuffer().end(), header.begin(), header.end());
         res->getWriteBuffer().insert(res->getWriteBuffer().end(), body.begin(), body.end());
-        std::cout << "CHECK!!!!!!!!!!!!!" << std::endl;
         requestList.erase(file);
         EV_SET(&change, res->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
     }
 }
 
-Buffer *Server::processRequest(Buffer *client, HttpRequest &request, struct kevent &change)
-{
-    std::string target;
-
-    std::vector<Location> locationList = config.getLocationList();
+int Server::checkValid(HttpRequest & request, std::string & target) {
+    if (request.method == NONE || request.url == "" || request.httpVersion == "") {
+        return 400;
+    }
+    std::vector<Location> locationList = config.getLocationList();    
     std::vector<Location>::iterator it = locationList.begin();
+    size_t len = 0;
+    Location location;
     for (; it != locationList.end(); it++) {
         if (request.url.compare(0, (*it).getPath().length(), (*it).getPath()) == 0) {
-            break ;
+            if (len < (*it).getPath().length()) {
+                len = (*it).getPath().length();
+                location = (*it);
+            }
         }
     }
-    target += it->getRoot();
-    if (request.url == it->getPath()) {
-        target += it->getIndex();
-    } else {
-        if (target[target.size() - 1] == '/')
-            target.erase(target.size() - 1);
-        target += request.url;
+    if (len == 0) { // there is no matching location => use server block configuration
+        if (request.method != NONE) {
+            std::set<METHOD> allowedMethod = config.getAllowedMethods();
+            if (allowedMethod.find(request.method) == allowedMethod.end()) {
+                return 405;
+            }
+        }
+        target += config.getRoot();
+        target += config.getIndex();
     }
-    request.url = target; // target으로 url 변경
-    std::cout << "TARGET : " << target << std::endl;
-    if (access(target.c_str(), F_OK | R_OK) == 0) // access ok
+    else // there is matching location => use location block configuration
     {
-        std::cout << "ACCESS OK" << std::endl;
-        int fileFd = open(target.c_str(), O_RDONLY);
-        if (fileFd > 0) // file open ok
-        {
-            std::cout << "OPEN OK" << std::endl;
-            File *res = new File(fileFd);
-            requestList[static_cast<Buffer *>(res)] = std::make_pair(client, request);
-            EV_SET(&change, fileFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-            return static_cast<Buffer *>(res);
+        if (request.method != NONE) {
+            std::set<METHOD> Allowed;
+            if (location.getAllowedMethods().size()) { // location에 allowedMethod가 있음
+                Allowed = location.getAllowedMethods();   
+            } else if (config.getAllowedMethods().size()) { // location에 allowedMethod가 없고 server에는 있음
+                Allowed = config.getAllowedMethods();
+            }
+            if (Allowed.find(request.method) == Allowed.end()) {
+                return 405;
+            }
         }
-        else // file open fail
-        {
-            std::cout << "OPEN NOT OK" << std::endl;
-            int code = 404;
-            // std::string message = "Not Found";
-            // std::string body = makeBody(request, code, message);
-            // std::string response = makeHeader(request, code, message, body);
-            // response += body;
-            // client->getWriteBuffer().insert(client->getWriteBuffer().end(), response.begin(), response.end());
-            EV_SET(&change, client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-            return 0;
+        if (location.getRoot() != "") {
+            target += location.getRoot(); // location에 root가 있으면 location root를 넣고
+        } else if (config.getRoot() != "") {
+            target += config.getRoot(); // location에 root가 없으면 server root를 넣기
+        } else {
+            return 404;
+        }
+        if (request.url == location.getPath()) { // request url과 location path가 동일할 때
+            if (location.getIndex() != "") { //location에 index가 있으면 해당 index를 넣고
+                target += location.getIndex();
+            } else if (config.getIndex() != "") { // location에 index가 없으면 서버 index를 넣기
+                target += config.getIndex();
+            } else {
+                return 404;
+            }
+        } else { // request url과 location path가 동일하지 않을 때 (따로 특정한 파일을 요구할 때)
+            target += request.url;
         }
     }
-    else
-    {
-        std::cout << "ACCESS NOT OK" << std::endl;
-        int code = 404;
-        std::string message = "Not Found";
-        // std::string body = makeBody(request, code, message);
-        // std::string response = makeHeader(request, code, message, body);
-        // response += body;
-        // client->getWriteBuffer().insert(client->getWriteBuffer().end(), response.begin(), response.end());
+    request.url = target;
+    std::cout << "\nTARGET : " << target << std::endl;
+    return 200;
+}
+
+Buffer* Server::processRequest(Buffer *client, HttpRequest &request, struct kevent &change)
+{
+    std::string target;
+    int code = checkValid(request, target);
+    if (code == 200) {
+        if (access(target.c_str(), F_OK | R_OK) == 0) {
+            int fileFd = open(target.c_str(), O_RDONLY);
+            if (fileFd > 0) // file open ok
+            {
+                File *res = new File(fileFd);
+                requestList[static_cast<Buffer *>(res)] = std::make_pair(client, request);
+                EV_SET(&change, fileFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+                return static_cast<Buffer *>(res);
+            }
+        }
+        code = 404;
+    }
+    if (code != 200) {
+        std::string message;
+        if (code == 400) {
+            message = ERR400;
+        } else if (code == 403) {
+            message = ERR403;
+        } else if (code == 404) {
+            message = ERR404;
+        } else if (code == 405) {
+            message = ERR405;
+        } else if (code == 408) {
+            message = ERR408;
+        } else if (code == 411) {
+            message = ERR411;
+        } else if (code == 413) {
+            message = ERR413;
+        } else if (code == 415) {
+            message = ERR415;
+        }
+        std::string body = makeErrorPage(code, message);
+        std::string response = makeHeader(request, code, message, body);
+        response += body;
+        client->getWriteBuffer().insert(client->getWriteBuffer().end(), response.begin(), response.end());
         EV_SET(&change, client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
         return 0;
     }
+    return 0;
 }
 
 static std::string getContentType(std::string url)
@@ -196,6 +244,34 @@ std::string Server::makeResponse(HttpRequest &request, int code, Buffer *buffer)
     return response.str();
 }
 
+std::string Server::makeErrorPage(int & code, std::string & message) {
+    std::ostringstream oss;
+
+    oss << "<!DOCTYPE html>\n";
+    oss << "<html lang=\"en\">\n";
+    oss << "<head>\n";
+    oss << "<meta charset=\"UTF-8\">\n";
+    oss << "<title>Error " << code << "</title>\n";
+    oss << "<style>\n";
+    oss << "body { font-family: Arial, sans-serif; background-color: #f8f9fa; color: #343a40; text-align: center; margin-top: 50px; }\n";
+    oss << "h1 { font-size: 3em; color: #d9534f; }\n";
+    oss << "p { font-size: 1.2em; color: #6c757d; }\n";
+    oss << "a { color: #007bff; text-decoration: none; }\n";
+    oss << "a:hover { text-decoration: underline; }\n";
+    oss << ".container { max-width: 600px; margin: 0 auto; }\n";
+    oss << "</style>\n";
+    oss << "</head>\n";
+    oss << "<body>\n";
+    oss << "<div class=\"container\">\n";
+    oss << "<h1>Error " << code << "</h1>\n";
+    oss << "<p>" << message << "</p>\n";
+    oss << "</div>\n";
+    oss << "</body>\n";
+    oss << "</html>";
+
+    return oss.str();
+}
+
 // std::string readFromPipe(int pipeFd) {
 //     const size_t bufferSize = 1000;
 //     std::vector<char> buffer(bufferSize);
@@ -213,78 +289,6 @@ std::string Server::makeResponse(HttpRequest &request, int code, Buffer *buffer)
 //     }
 //     result.push_back(0);
 //     return (result);
-// }
-
-// void Server::HttpRequestValidCheck(HttpRequest & request, int & code, std::string & message) {
-//     if (request.method == NONE) {
-//         code = 400;
-//         message = "Bad Request: HTTP method is missing.";
-//         return;
-//     }
-//     if (request.url.empty()) {
-//         code = 400;
-//         message = "Bad Request: URL is missing.";
-//         return;
-//     }
-//     std::set<METHOD> allowedMethod = config.getAllowedMethods();
-//     if (allowedMethod.size() && allowedMethod.find(request.method) == allowedMethod.end()) {
-//         code = 405;
-//         message = "Method Not Allowed: Invalid HTTP method.";
-//         return; 
-//     }
-//     if (request.httpVersion != "HTTP/1.1") {
-//         code = 400;
-//         message = "Bad Request: Invalid HTTP version.";
-//         return;
-//     }
-//     if (request.host.empty()) {
-//         code = 400;
-//         message = "Bad Request: Host header is missing.";
-//         return;
-//     }
-//     if (request.method == POST) {
-//         if (request.headers.find("Content-Length") == request.headers.end()) {
-//             code = 411;
-//             message = "Length Required: Content-Length header is missing.";
-//             return;
-//         } else {
-//             try {
-//                 int contentLength = std::stoi(request.headers["Content-Length"]);
-//                 if (contentLength != request.body.size()) {
-//                     code = 400;
-//                     message = "Bad Request: Content-Length does not match the body size.";
-//                     return;
-//                 }
-//             } catch (std::exception &e) {
-//                 code = 400;
-//                 message = "Bad Request: Invalid Content-Length value.";
-//                 return;
-//             }
-//         }
-//     }
-//     code = 200;
-//     message = "OK";
-// }
-
-// std::string Server::makeErrorPage(int & code, std::string & message) {
-//     std::ostringstream oss;
-
-//     oss << "<html lang=\"en\">\n";
-//     oss << "<head>\n";
-//     oss << "<title>Error " << code << "</title>\n";
-//     oss << "<style>\n";
-//     oss << "body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }\n";
-//     oss << "h1 { font-size: 2em; color: #d9534f; }\n";
-//     oss << "p { font-size: 1em; color: #333; }\n";
-//     oss << "</style>\n";
-//     oss << "</head>\n";
-//     oss << "<body>\n";
-//     oss << "<h1>Error " << code << "</h1>\n";
-//     oss << "<p>" << message << "</p>\n";
-//     oss << "</body>\n";
-//     oss << "</html>";
-
-//     return oss.str();
 // }
 
 // std::string Server::makeBody(HttpRequest & request, int & code, std::string & message) {
@@ -347,24 +351,15 @@ std::string Server::makeResponse(HttpRequest &request, int code, Buffer *buffer)
 
 std::string Server::makeHeader(HttpRequest & request, int & code, std::string & message, std::string & body) {
     std::ostringstream oss;
+    std::string contentType;
+    if (code / 100 == 4)
+        contentType = "text/html";
+    else
+        contentType = getContentType(request.url);
     oss << request.httpVersion << " " << code << " " << message << "\r\n";
-    oss << "Content-Type: " << getContentType(request.url) << "\r\n";
+    oss << "Content-Type: " << contentType << "\r\n";
     oss << "Content-Length: " << body.size() << "\r\n";
     oss << "Connection: keep-alive\r\n";
     oss << "\r\n";
     return oss.str();
 }
-
-// void Server::makeResponse(HttpRequest & request, Buffer * buffer) {
-//     std::ostringstream response;
-//     int code;
-//     std::string message;
-    
-//     HttpRequestValidCheck(request, code, message);
-//     std::string body = makeBody(request, code, message);
-//     response << makeHeader(request, code, message, body);
-//     response << body;
-//     std::string responseStr = response.str();
-//     std::cout << "\n<RESPONSE>\n" << responseStr << std::endl;
-// 	buffer->getWriteBuffer().insert(buffer->getWriteBuffer().end(), responseStr.begin(), responseStr.end());
-// }

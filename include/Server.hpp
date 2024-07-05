@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/05 13:00:10 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/05 19:33:32 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,18 +34,29 @@ class Server {
 		~Server();
 
 		ServerConfig getConfig();
+		
 		int getServerFd() const;
-		void afterProcessRequest(Buffer *file, struct kevent &change); // file을 열 수 있는지 확인하고 존재하면 buffer(파일)을 생성한다.
+		
+		int checkValid(HttpRequest & request, std::string & target);
+
 		Buffer *processRequest(Buffer *client, HttpRequest &request, struct kevent &change); 
+
+		void afterProcessRequest(Buffer *file, struct kevent &change); // file을 열 수 있는지 확인하고 존재하면 buffer(파일)을 생성한다.
+		
 		std::string makeResponse(HttpRequest &request, int code, Buffer *buffer);
+		
 		void initServer(ServerConfig & config);
+		
 		// bool findMatchingLocation(std::string & requestURL, Location & location);
+		
 		void HttpRequestValidCheck(HttpRequest & request, int & code, std::string & message);
+		
 		std::string makeErrorPage(int & code, std::string & message);
+		
 		std::string makeBody(HttpRequest & request, int & code, std::string & message);
+		
 		std::string makeHeader(HttpRequest & request, int & code, std::string & message, std::string & body);
-		// void makeResponse(HttpRequest & request, Buffer * buffer);
-		// 파싱된 request 구조체 넣어주면 그걸로 response 만들어서 buffer에다가 넣기
+		
 
 };
 

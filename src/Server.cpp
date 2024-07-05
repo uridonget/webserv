@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/05 19:43:29 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/05 20:04:38 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,6 +118,7 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
                 return 404;
             }
         } else { // request url과 location path가 동일하지 않을 때 (따로 특정한 파일을 요구할 때)
+            request.url.erase(request.url.begin(), request.url.begin() + location.getPath().length());
             target += request.url;
         }
     }

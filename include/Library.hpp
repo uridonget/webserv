@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 16:38:01 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 19:28:05 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 #include <cctype>
 #include <sys/stat.h>
 
-#define BUFFER_SIZE 8000
+#define BUFFER_SIZE 800
 #define MAX_BODY_SIZE 30000000
 #define READ_END "\r\n\r\n"
 

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 16:39:03 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 19:44:38 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,12 +60,6 @@ int Webserv::checkNewClient(uintptr_t eventIdent) {
 	std::map<int, int>::iterator it = serverFdMap.find(eventIdent);
 	if (it != serverFdMap.end()) {
 		return -1;
-	} else {
-		for (std::vector<Buffer *>::iterator it = bufferList.begin(); it != bufferList.end(); ++it) {
-			if ((*it)->getFd() == eventIdent) {
-				return -1;
-			}
-		}
 	}
 	return eventIdent;
 }
@@ -195,15 +189,19 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 	}
 	// Message == 1
 	RequestParser parser;
+	// std::cout << "----- buf read value -----" << std::endl;
+	// write(1, buf, n);
+	// std::cout << "----- buf read value end -----" << std::endl;
 	size_t endHeader;
-	size_t endIndex = parser.checkEnd(bufferList[bufferIdx]->getReadBuffer(), buf, n, endHeader);
+	Message *message = dynamic_cast<Message *>(bufferList[bufferIdx]);
+	size_t endIndex = parser.checkEnd(message, buf, n, endHeader);
     if (endIndex != RequestParser::npos)
     {
-		std::cout << "MESSAGE read end!" << std::endl;
 		Buffer *buffer = bufferList[bufferIdx];
-		llParser parser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
+		llParser llparser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
 		try{
-			HttpRequest request = parser.parse(); // 파싱 완료
+			HttpRequest request = llparser.parse(); // 파싱 완료
+			request.body.insert(request.body.end(), buffer->getReadBuffer().begin() + endHeader + 4, buffer->getReadBuffer().begin() + endIndex + 4);
 			printHttpRequest(request);
 			std::map<int, Server>::iterator server = serverList.find(serverFd);
 			if (server != serverList.end())
@@ -217,14 +215,17 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 				}
 				changeList.push_back(clientEvent);
 			}
+			std::cout << "Parsing success" << std::endl;
 		}
 		catch (const std::runtime_error &e)
 		{
 			std::cerr << "Parsing error: " << e.what() << std::endl;
 		}
+		// buffer->getReadBuffer().erase(buffer->getReadBuffer().begin(), buffer->getReadBuffer().begin() + endIndex + 3);
 		std::vector<char> temp =  std::vector<char>(buffer->getReadBuffer().begin() + endIndex + 4, buffer->getReadBuffer().end());
 		buffer->getReadBuffer().clear();
 		buffer->getReadBuffer() = temp;
+		std::cout << "buffer size = " << buffer->getReadBuffer().size() << std::endl;
 	}
 }
 
@@ -260,9 +261,6 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 		changeList.push_back(clientEvent2);
 		return ;
 	}
-
-	// 여기서 사이즈가 서로 다르다는건 버퍼 사이즈 한계로 다 못썼다는 뜻 다시ㄱㄱ
-	// 이터레이터로 어디까지 썼는지 알고 있어야 함
 	if (!writeBuffer.empty()){
 		return ;
 	}

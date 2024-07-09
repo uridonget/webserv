@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 17:30:57 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 19:33:08 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -322,24 +322,23 @@ std::string Server::makeErrorPage(int & code, std::string & message) {
     return oss.str();
 }
 
-std::string readFromPipe(int pipeFd) {
-    const size_t bufferSize = 1000;
-    std::vector<char> buffer(bufferSize);
-    std::string result;
-
-    while (true) {
-        ssize_t bytesRead = read(pipeFd, buffer.data(), bufferSize);
-        if (bytesRead < 0) {
-            break;
-        }
-        if (bytesRead == 0) {
-            break;
-        }
-        result.append(buffer.data(), bytesRead);
-    }
-    result.push_back(0);
-    return (result);
-}
+// std::string readFromPipe(int pipeFd) {
+//     const size_t bufferSize = 1000;
+//     std::vector<char> buffer(bufferSize);
+//     std::string result;
+//     while (true) {
+//         ssize_t bytesRead = read(pipeFd, buffer.data(), bufferSize);
+//         if (bytesRead < 0) {
+//             break;
+//         }
+//         if (bytesRead == 0) {
+//             break;
+//         }
+//         result.append(buffer.data(), bytesRead);
+//     }
+//     result.push_back(0);
+//     return (result);
+// }
 
 // std::string Server::makeBody(HttpRequest & request, int & code, std::string & message) {
 //     if (code != 200) {

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:08:20 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/09 16:37:34 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 19:24:43 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,11 @@ public:
 llParser::llParser(std::vector<char> &buffer, size_t endHeader) : stream(std::string(buffer.begin(), buffer.begin() + endHeader + 4)), currentChar(NULL_CHAR)
 {
     nextChar();
+    // std::cout << "buffer end : " << endHeader + 4 << std::endl;
+    // for (auto i = buffer.begin(); i != buffer.begin() + endHeader + 4; i++)
+	// {
+	// 	std::cout << *i;
+	// }
 }
 
 static void urlParsing(HttpRequest & request, std::string rawUrl) {
@@ -72,7 +77,7 @@ HttpRequest llParser::parse()
 		request.headers[header.first] = header.second;
 	}
     consumeCRLF();
-    expect('\0');
+    //expect('\0');
     if (request.headers.find("Host") != request.headers.end())
     {
         request.host = request.headers["Host"];

@@ -205,22 +205,54 @@ std::string readFromPipe(int pipeFd) {
     return (result);
 }
 
+static std::vector<std::string> ft_split(std::string str) {
+	std::vector<std::string> words;
+	std::stringstream sstream(str);
+	std::string word;
+
+	while (getline(sstream, word, '/')) {
+		if (word == "..") {
+			if (!words.empty()) 
+				words.pop_back();
+		}
+		else if (word == "." || word.empty())
+			continue;
+		else
+			words.push_back(word);
+	}
+
+	return words;
+}
+
 bool Server::findMatchingLocation(std::string & requestURL, Location & location) {
-    std::vector<Location> locationList = config.getLocationList();
-    bool res = false;
-    for (std::vector<Location>::const_iterator it = locationList.begin(); it != locationList.end(); ++it) {
-        const std::string &locPath = it->getPath();
-        if (requestURL.compare(0, locPath.length(), locPath) == 0) {
-            if (locPath.length() <= location.getPath().length()) {
-                location = *it;
-                res = true;
-                std::cout << "MATCH!" << std::endl;
-                std::cout << "url  : " << requestURL << std::endl;
-                std::cout << "path : " << locPath << std::endl;
-            }
-        }
-    }
-    return res;
+	std::vector<Location> locationList = config.getLocationList();
+	bool res = false;
+
+	std::vector<std::string> splitUrl = ft_split(requestURL);
+	std::vector<std::string> splitPath;
+
+	for (std::vector<Location>::const_iterator it = locationList.begin(); it != locationList.end(); ++it) {
+		const std::string &locPath = it->getPath();
+		splitPath = ft_split(locPath);
+
+		int j = splitUrl.size();
+		int k = splitPath.size();
+		int i = 0;
+		while (i < j && i < k) {
+
+			if (splitUrl[i] != splitPath[i])
+				break;
+
+			if (i + 1 == j || i + 1 == k) {
+				if (j == k || j == k + 1) {
+					res = true;
+					location = *it;
+				}
+			}
+			i++;
+		}
+	}
+	return res;
 }
 
 void Server::HttpRequestValidCheck(HttpRequest & request, int & code, std::string & message) {

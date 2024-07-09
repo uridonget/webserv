@@ -152,12 +152,9 @@ void Webserv::initKqueue() {
 }
 
 void Webserv::newClient(int serverFd) {
-	// std::cout << "---- new client event ----" << std::endl;
 	int clientFd = accept(serverFd, NULL, NULL);
 	if (clientFd < 0) {
 		std::cout << "serecrFD : " << serverFd<< std::endl;
-		system("lsof -c webserv");
-		perror("accept");
 		throw RuntimeException("accept");
 	} else {
 		serverFdSet.insert(std::make_pair(clientFd, serverFd));
@@ -167,15 +164,6 @@ void Webserv::newClient(int serverFd) {
 		changeList.push_back(client_event);
 		Buffer* newClient = new Message(clientFd);
 		bufferList.push_back(newClient);
-		std::vector<Buffer*>::iterator iter = bufferList.begin();
-		for (; iter != bufferList.end(); iter++) {
-			if ((*iter)->getFd() == clientFd) {
-				break;
-			}
-		}
-		if (iter == bufferList.end()) {
-			throw RuntimeException("client inset fail");
-		}
 	}
 }
 
@@ -282,11 +270,25 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd)
 
 }
 
-void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) 
-{
-	// 일단 write하셈 ㅋㅋ
-	int writeSize = write(bufferList[bufferIdx]->getFd(), bufferList[bufferIdx]->getWriteBuffer().data(), bufferList[bufferIdx]->getWriteBuffer().size());
-	if (writeSize == -1)
+
+void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
+	// std::cout << "****** write event ******" << std::endl;
+
+	std::vector<char>& writeBuffer = bufferList[bufferIdx]->getWriteBuffer();
+	std::string response(writeBuffer.begin(), writeBuffer.end());
+
+	int writeSize = BUFFER_SIZE;
+	if (writeBuffer.size() < BUFFER_SIZE) {
+		writeSize = writeBuffer.size();
+	}
+
+	int writtenSize = write(bufferList[bufferIdx]->getFd(), response.c_str(), writeSize);
+
+	for (int i = 0; i < writtenSize; i++) {
+		writeBuffer.erase(writeBuffer.begin());
+	}
+
+	if (writtenSize == -1)
 	{
 		if (close(bufferList[bufferIdx]->getFd()) == -1)
 			std::cout << "already closed fd!!!" << std::endl;
@@ -301,12 +303,12 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd)
 		return ;
 	}
 
-	std::cout << "Fd : " << bufferList[bufferIdx]->getFd() << " size :" << writeSize << std::endl;
 	// 여기서 사이즈가 서로 다르다는건 버퍼 사이즈 한계로 다 못썼다는 뜻 다시ㄱㄱ
 	// 이터레이터로 어디까지 썼는지 알고 있어야 함
-	if (writeSize != bufferList[bufferIdx]->getWriteBuffer().size()){
+	if (!writeBuffer.empty()){
 		return ;
 	}
+
 
 	// Message == 1
 	// 응답 보냈다는 뜻
@@ -318,10 +320,13 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd)
 
 	// File == 2
 	// 파일에 쓴다 POST 요청 성공 이라는 뜻
-	//successFileWrite(bufferIdx);
+	// successFileWrite(int bufferIdx);
+
 	// 서버 구현 필요!
 	// 여기서 서버가 응답 메세지 생성 해줘야함
+
 	// return;
+
 }
 
 void Webserv::connectKqueueToServer() {

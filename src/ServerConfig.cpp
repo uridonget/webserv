@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:31:23 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 12:44:53 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 13:14:22 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,7 @@ ServerConfig::ServerConfig()
 	serverName(""),
 	root("/"),
 	clientMaxBodySize(0),
-	index("index.html"),
-	autoindex(false) {
+	index("index.html") {
 }
 
 ServerConfig::~ServerConfig() {}
@@ -106,17 +105,7 @@ void ServerConfig::parseConfig(const std::string& configString) {
 				currentLocation.setIndex(tokens[1]);
 			} else
 				index = tokens[1];
-		}
-		else if (tokens[0] == "autoindex") {
-			if (tokens.size() != 2 || !checkSemiColon(tokens))
-				throw RuntimeException("invalid autoindex in configuration file");
-			if (inLocationBlock) { // location autoindex
-				currentLocation.setAutoIndex(tokens[1] == "on");
-			} else { // server autoindex
-				autoindex = (tokens[1] == "on");
-			}
-		}
-		else if (tokens[0] == "return") {
+		} else if (tokens[0] == "return") {
 			if (tokens.size() != 3 || !checkSemiColon(tokens) || !isNumber(tokens[1]))
 				throw RuntimeException("invalid return in configuration file");
 			if (inLocationBlock) {
@@ -213,10 +202,6 @@ std::string ServerConfig::getRoot() const {
 
 std::string ServerConfig::getIndex() const {
     return index;
-}
-
-bool ServerConfig::getAutoindex() const {
-    return autoindex;
 }
 
 std::map<int, std::string> ServerConfig::getErrorPages() const {

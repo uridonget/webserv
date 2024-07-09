@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 12:43:55 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 13:59:32 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,13 +50,17 @@ void Server::initServer(ServerConfig & config) {
 bool Server::findMatchingLocation(std::string & requestURL, Location & location) {
     std::vector<Location> locationList = config.getLocationList();
     bool res = false;
-    std::vector<std::string> splitUrl = ft_split(requestURL);
+    std::vector<std::string> splitUrl = ft_split(requestURL); // 0
     std::vector<std::string> splitPath;
     for (std::vector<Location>::const_iterator it = locationList.begin(); it != locationList.end(); ++it) {
         const std::string &locPath = it->getPath();
-        splitPath = ft_split(locPath);
+        splitPath = ft_split(locPath); // 0
         int j = splitUrl.size();
         int k = splitPath.size();
+        if (j == 0 && k == 0) {
+            location = *it;
+            return true;
+        }
         int i = 0;
         while (i < j && i < k) {
             if (splitUrl[i] != splitPath[i])
@@ -96,6 +100,7 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
     Location myLocation;
     bool isLocation = findMatchingLocation(request.url, myLocation);
     if (isLocation == false) { // there is no matching location
+        std::cout << "LOCATION FALSE" << std::endl;
         if (request.method != NONE) {
             std::set<METHOD> allowedMethod = config.getAllowedMethods();
             if (allowedMethod.find(request.method) == allowedMethod.end()) {
@@ -113,6 +118,7 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
     }
     else // there is matching location => use location block configuration
     {
+        std::cout << "LOCATION TRUE" << std::endl;
         if (request.method != NONE) {
             std::set<METHOD> Allowed;
             if (myLocation.getAllowedMethods().size()) { // location에 allowedMethod가 있음
@@ -144,6 +150,15 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
             if (request.url[request.url.size() - 1] != '/') {
                 request.url += '/';
                 return 301;
+            } else if (request.url == "/") {
+                target += '/';
+                if (myLocation.getIndex() != "") {
+                    target += myLocation.getIndex();
+                } else if (config.getIndex() != "") {
+                    target += config.getIndex();
+                } else {
+                    return 404;
+                }
             } else if (request.url == myLocation.getPath() + '/') {
                 if (myLocation.getIndex() != "") {
                     target += myLocation.getIndex();
@@ -154,7 +169,7 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
                 }
             }
         }
-        // std::cout << "TARGET : " << target << std::endl;
+        std::cout << "TARGET : " << target << std::endl;
     }
     request.url = target;
     return 200;
@@ -206,6 +221,8 @@ Buffer* Server::processRequest(Buffer *client, HttpRequest &request, struct keve
         response += body;
         client->getWriteBuffer().insert(client->getWriteBuffer().end(), response.begin(), response.end());
         EV_SET(&change, client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+        std::cout << "\n<RESPONSE>\n";
+        std::cout << response << std::endl;
         return 0;
     }
     return 0;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/01 16:19:44 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 13:17:33 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,77 +107,79 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
 	return (RequestParser::npos);
 }
 
-struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, size_t endIndex, size_t & endHeader) {
-	struct HttpRequest parsedRequest;
+// 삭제 대상
+// struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, size_t endIndex, size_t & endHeader) {
+// 	struct HttpRequest parsedRequest;
 		
-	std::string request(fullRequest.begin(), fullRequest.begin() + endIndex + 1);
+// 	std::string request(fullRequest.begin(), fullRequest.begin() + endIndex + 1);
 		
-	std::istringstream iss(request);
-	std::string line;
-	std::vector<std::string> tokens;
-	std::string temp;
+// 	std::istringstream iss(request);
+// 	std::string line;
+// 	std::vector<std::string> tokens;
+// 	std::string temp;
 
-	std::getline(iss, line);
-	tokens.clear();
-	std::istringstream lineStream(line);
-	while (lineStream >> temp) {
-		tokens.push_back(temp);
-	}
-	if (tokens.size() != 3) {
-		throw RuntimeException("invalid http request header1");
-	}
+// 	std::getline(iss, line);
+// 	tokens.clear();
+// 	std::istringstream lineStream(line);
+// 	while (lineStream >> temp) {
+// 		tokens.push_back(temp);
+// 	}
+// 	if (tokens.size() != 3) {
+// 		throw RuntimeException("invalid http request header1");
+// 	}
 
-	if (tokens[0] == "GET") {
-		parsedRequest.method = GET;
-	}
-	else if (tokens[0] == "POST") {
-		parsedRequest.method = GET;
-	}
-	else if (tokens[0] == "DELETE") {
-		parsedRequest.method = GET;
-	}
+// 	if (tokens[0] == "GET") {
+// 		parsedRequest.method = GET;
+// 	}
+// 	else if (tokens[0] == "POST") {
+// 		parsedRequest.method = GET;
+// 	}
+// 	else if (tokens[0] == "DELETE") {
+// 		parsedRequest.method = GET;
+// 	}
 
-	parsedRequest.url = tokens[1];
-	parsedRequest.httpVersion = tokens[2];
-	while (std::getline(iss, line)) {
-		tokens.clear();
-		std::istringstream lineStream(line);
-		while (lineStream >> temp) {
-			tokens.push_back(temp);
-		}
-		if (tokens[0] == "Host:") {
-			if (tokens.size() != 2)
-				throw RuntimeException("invalid http request header2");
-			parsedRequest.host = tokens[1];
-		}
-		else if (tokens[0] == "User-Agent:") {
-			std::string agent = "";
-			for (int i=1; i < tokens.size(); i++) {
-				agent += tokens[i];
-				agent += ' ';
-			}
-			parsedRequest.userAgent = agent;
-		}
-		else if (tokens[0] == "Accept:") {
-			if (tokens.size() != 2) {
-				throw RuntimeException("invalid http request header4");
-			}
-			parsedRequest.accept = tokens[1];
-		}
-		else if (tokens[0] == "Content-Length:") {
-			if (tokens.size() != 2) {
-				throw RuntimeException("invalid http request header4");
-			}
-			parsedRequest.contentLength = tokens[1];
-		}
-		else if (line.length() == 0) 
-			break ;
-	}
-	for (int i=0; endHeader + i < endIndex; i++) {
-		parsedRequest.body.push_back(request[i]);
-	}
-	return parsedRequest;
-}
+// 	parsedRequest.url = tokens[1];
+// 	parsedRequest.httpVersion = tokens[2];
+// 	while (std::getline(iss, line)) {
+// 		tokens.clear();
+// 		std::istringstream lineStream(line);
+// 		while (lineStream >> temp) {
+// 			tokens.push_back(temp);
+// 		}
+// 		if (tokens[0] == "Host:") {
+// 			if (tokens.size() != 2)
+// 				throw RuntimeException("invalid http request header2");
+// 			parsedRequest.host = tokens[1];
+// 		}
+// 		else if (tokens[0] == "User-Agent:") {
+// 			std::string agent = "";
+// 			for (int i=1; i < tokens.size(); i++) {
+// 				agent += tokens[i];
+// 				agent += ' ';
+// 			}
+// 			parsedRequest.userAgent = agent;
+// 		}
+// 		else if (tokens[0] == "Accept:") {
+// 			if (tokens.size() != 2) {
+// 				throw RuntimeException("invalid http request header4");
+// 			}
+// 			parsedRequest.accept = tokens[1];
+// 		}
+// 		else if (tokens[0] == "Content-Length:") {
+// 			if (tokens.size() != 2) {
+// 				throw RuntimeException("invalid http request header4");
+// 			}
+// 			parsedRequest.contentLength = tokens[1];
+// 		}
+// 		else if (line.length() == 0) 
+// 			break ;
+// 	}
+// 	for (int i=0; endHeader + i < endIndex; i++) {
+// 		parsedRequest.body.push_back(request[i]);
+// 	}
+// 	std::cout << "REQUEST PARSER WORKING?\n"; 
+// 	return parsedRequest;
+// }
 
 void RequestParser::setBody(HttpRequest & request, std::vector<char> & buf, size_t & endHeader, size_t & endIndex) {
 	if (endHeader != endIndex) {

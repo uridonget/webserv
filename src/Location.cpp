@@ -3,8 +3,7 @@
 Location::Location()
 	: path(""),
 	root(""),
-	index(""),
-	autoindex(false) {	
+	index("") {	
 }
 
 Location::~Location() {}
@@ -19,10 +18,6 @@ void Location::setRoot(std::string root) {
 
 void Location::setIndex(std::string index) {
 	this->index = index;
-}
-
-void Location::setAutoIndex(bool autoindex) {
-	this->autoindex = autoindex;
 }
 
 void Location::setRedirection(int errorCode, std::string path) {
@@ -47,10 +42,6 @@ std::string Location::getIndex() const {
 	return (index);
 }
 
-bool Location::getAutoIndex() const {
-	return (autoindex);
-}
-
 std::pair<int, std::string> Location::getRedirection() const {
 	return (redirection);
 }
@@ -67,11 +58,6 @@ void Location::showLocation() const {
 		std::cout << "root : " << getRoot() << std::endl;
 	if (index.length())
 		std::cout << "index : " << getIndex() << std::endl;
-	std::cout << "index : ";
-	if (getAutoIndex())
-		std::cout << "on" << std::endl;
-	else
-		std::cout << "off" << std::endl;
 	if (getRedirection().first != 0)
 		std::cout << "return : " << getRedirection().first << ", " << getRedirection().second << std::endl;
 	if (allowedMethods.size()) {

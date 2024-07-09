@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:23:48 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 16:53:20 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 13:13:28 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@ class ServerConfig {
 		std::string						serverName; // localhost, 127.0.0.1
 		std::string 					root; // root path
 		std::string						index;
-		bool 							autoindex;
 		std::map<int, std::string>		errorPages; // <errorNum, path>
 		std::pair<int, std::string>		redirection; // return ...
 		std::vector<Location> 			locationList; // locaiton list
@@ -40,7 +39,6 @@ class ServerConfig {
 		std::string getServerName() const;
 		std::string getRoot() const;
 		std::string getIndex() const;
-		bool getAutoindex() const;
 		std::map<int, std::string> getErrorPages() const;
 		std::pair<int, std::string> getRedirection() const;
 		std::vector<Location> getLocationList() const;

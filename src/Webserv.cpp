@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/05 18:43:19 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 12:32:17 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,11 +173,6 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 		return ;
 	}
 	if (isMessage(bufferIdx) == 2) { // File
-		std::cout << "READ : ";
-		for (int i = 0; i < n; i++) {
-			std::cout << buf[i];
-		}
-		std::cout << std::endl;
 		bufferList[bufferIdx]->getReadBuffer().insert(bufferList[bufferIdx]->getReadBuffer().end(), buf, buf + n);
 		if (n != BUFFER_SIZE || n == 0)
 		{

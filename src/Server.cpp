@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/05 20:07:06 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 12:32:59 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,32 @@ void Server::initServer(ServerConfig & config) {
 	}
 }
 
+bool Server::findMatchingLocation(std::string & requestURL, Location & location) {
+    std::vector<Location> locationList = config.getLocationList();
+    bool res = false;
+    std::vector<std::string> splitUrl = ft_split(requestURL);
+    std::vector<std::string> splitPath;
+    for (std::vector<Location>::const_iterator it = locationList.begin(); it != locationList.end(); ++it) {
+        const std::string &locPath = it->getPath();
+        splitPath = ft_split(locPath);
+        int j = splitUrl.size();
+        int k = splitPath.size();
+        int i = 0;
+        while (i < j && i < k) {
+            if (splitUrl[i] != splitPath[i])
+                break;
+            if (i + 1 == j || i + 1 == k) {
+                if (j == k || j == k + 1) {
+                    res = true;
+                    location = *it;
+                }
+            }
+            i++;
+        }
+    }
+    return res;
+}
+
 void Server::afterProcessRequest(Buffer *file, struct kevent &change)
 {  
     std::map<Buffer *, std::pair<Buffer *, HttpRequest> >::iterator it = requestList.find(file);
@@ -67,34 +93,30 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
     if (request.method == NONE || request.url == "" || request.httpVersion == "") {
         return 400;
     }
-    std::vector<Location> locationList = config.getLocationList();    
-    std::vector<Location>::iterator it = locationList.begin();
-    size_t len = 0;
-    Location location;
-    for (; it != locationList.end(); it++) {
-        if (request.url.compare(0, (*it).getPath().length(), (*it).getPath()) == 0) {
-            if (len < (*it).getPath().length()) {
-                len = (*it).getPath().length();
-                location = (*it);
-            }
-        }
-    }
-    if (len == 0) { // there is no matching location => use server block configuration
+    Location myLocation;
+    bool isLocation = findMatchingLocation(request.url, myLocation);
+    if (isLocation == false) { // there is no matching location
         if (request.method != NONE) {
             std::set<METHOD> allowedMethod = config.getAllowedMethods();
             if (allowedMethod.find(request.method) == allowedMethod.end()) {
                 return 405;
             }
         }
-        target += config.getRoot();
-        target += config.getIndex();
+        if (config.getRoot() == "")
+            target += config.getRoot();    
+        int isDir = isDirectory(request.url);
+        if (isDir == 1) {
+            return 404;
+        } else if (isDir == 2) {
+            // 아 몰라 나중에 수정
+        }
     }
     else // there is matching location => use location block configuration
     {
         if (request.method != NONE) {
             std::set<METHOD> Allowed;
-            if (location.getAllowedMethods().size()) { // location에 allowedMethod가 있음
-                Allowed = location.getAllowedMethods();   
+            if (myLocation.getAllowedMethods().size()) { // location에 allowedMethod가 있음
+                Allowed = myLocation.getAllowedMethods();   
             } else if (config.getAllowedMethods().size()) { // location에 allowedMethod가 없고 server에는 있음
                 Allowed = config.getAllowedMethods();
             }
@@ -102,30 +124,39 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
                 return 405;
             }
         }
-        if (location.getRoot() != "") {
-            target += location.getRoot(); // location에 root가 있으면 location root를 넣고
+        if (myLocation.getRoot() != "") {
+            target += myLocation.getRoot(); // location에 root가 있으면 location root를 넣고
         } else if (config.getRoot() != "") {
             target += config.getRoot(); // location에 root가 없으면 server root를 넣기
         } else {
             return 404;
         }
-        if (request.url == location.getPath()) { // request url과 location path가 동일할 때
-            if (location.getIndex() != "") { //location에 index가 있으면 해당 index를 넣고
-                target += location.getIndex();
-            } else if (config.getIndex() != "") { // location에 index가 없으면 서버 index를 넣기
-                target += config.getIndex();
-            } else {
-                return 404;
-            }
-        } else { // request url과 location path가 동일하지 않을 때 (따로 특정한 파일을 요구할 때)
-            std::cout << "REQUEST URL   : " << request.url << std::endl;
-            std::cout << "LOCATION PATH : " << location.getPath() << std::endl;
-            request.url.erase(request.url.begin(), request.url.begin() + location.getPath().length());
-            target += request.url;
+        if (target[target.size() - 1] == '/') {
+            target.erase(target.size() - 1);
         }
+        // std::cout << "TARGET : " << target << std::endl;
+        target += request.url.substr(myLocation.getPath().length(), request.url.length());
+        // std::cout << "TARGET : " << target << std::endl;
+        int isDir = isDirectory(target);
+        if (isDir == 1) {
+            return 404;
+        } else if (isDir == 3) {
+            if (request.url[request.url.size() - 1] != '/') {
+                request.url += '/';
+                return 301;
+            } else if (request.url == myLocation.getPath() + '/') {
+                if (myLocation.getIndex() != "") {
+                    target += myLocation.getIndex();
+                } else if (config.getIndex() != "") {
+                    target += config.getIndex();
+                } else {
+                    return 404;
+                }
+            }
+        }
+        // std::cout << "TARGET : " << target << std::endl;
     }
     request.url = target;
-    std::cout << "\nTARGET : " << target << std::endl;
     return 200;
 }
 
@@ -164,8 +195,13 @@ Buffer* Server::processRequest(Buffer *client, HttpRequest &request, struct keve
             message = ERR413;
         } else if (code == 415) {
             message = ERR415;
+        } else if (code == 301) {
+            message = "Moved Permanently";
         }
-        std::string body = makeErrorPage(code, message);
+        std::string body = "";
+        if (code / 100 == 4) {
+            body = makeErrorPage(code, message);
+        }
         std::string response = makeHeader(request, code, message, body);
         response += body;
         client->getWriteBuffer().insert(client->getWriteBuffer().end(), response.begin(), response.end());
@@ -355,7 +391,7 @@ std::string Server::makeErrorPage(int & code, std::string & message) {
 std::string Server::makeHeader(HttpRequest & request, int & code, std::string & message, std::string & body) {
     std::ostringstream oss;
     std::string contentType;
-    if (code / 100 == 4)
+    if (code / 100 == 4 || code / 100 == 3)
         contentType = "text/html";
     else
         contentType = getContentType(request.url);
@@ -363,6 +399,9 @@ std::string Server::makeHeader(HttpRequest & request, int & code, std::string & 
     oss << "Content-Type: " << contentType << "\r\n";
     oss << "Content-Length: " << body.size() << "\r\n";
     oss << "Connection: keep-alive\r\n";
+    if (code / 100 == 3) {
+        oss << "Location: " << request.url << "\r\n";
+    }
     oss << "\r\n";
     return oss.str();
 }

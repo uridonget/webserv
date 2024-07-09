@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/05 19:33:32 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 11:20:08 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ class Server {
 		
 		void initServer(ServerConfig & config);
 		
-		// bool findMatchingLocation(std::string & requestURL, Location & location);
+		bool findMatchingLocation(std::string & requestURL, Location & location);
 		
 		void HttpRequestValidCheck(HttpRequest & request, int & code, std::string & message);
 		

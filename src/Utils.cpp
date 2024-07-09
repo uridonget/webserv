@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:46:15 by heolee            #+#    #+#             */
-/*   Updated: 2024/07/04 17:33:12 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 11:38:31 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,4 +25,38 @@ std::string readFile(const char* filename) {
 	}
 	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	return content;
+}
+
+std::vector<std::string> ft_split(std::string str) {
+    std::vector<std::string> words;
+    std::stringstream sstream(str);
+    std::string word;
+    while (getline(sstream, word, '/')) {
+        if (word == "..") {
+            if (!words.empty())
+                words.pop_back();
+        }
+        else if (word == "." || word.empty())
+            continue;
+        else
+            words.push_back(word);
+    }
+    return words;
+}
+
+/*
+return 1 : 경로에 파일이 없음
+return 2 : 경로에 파일이 있고 그 파일이 디렉토리가 아님
+return 3 : 경로에 파일이 있고 그 파일이 디렉토리
+*/
+int isDirectory(std::string & path) {
+    struct stat statbuf;
+    if (stat(path.c_str(), &statbuf) != 0) {
+        return 1; // 경로에 파일이 없음
+    }
+    if (!S_ISDIR(statbuf.st_mode)) {
+        return 2; // 경로에 파일이 있고 그 파일이 디렉토리가 아님
+    } else {
+        return 3; // 경로에 파일이 있고 그 파일이 디렉토리임
+    }
 }

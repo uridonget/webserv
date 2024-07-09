@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 17:17:42 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/06 15:06:13 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,38 +78,80 @@ void Server::afterProcessRequest(Buffer *file, struct kevent &change)
     return ;
 }
 
-Buffer *Server::processRequest(Buffer *client, HttpRequest &request, struct kevent &change)
+#include "../include/MimeParser.hpp"
+
+std::vector<Buffer *> Server::processRequest(Buffer *client, HttpRequest &request, std::vector<struct kevent> &changeList)
 {
     std::string target;
+    std::vector<Buffer *> resList; 
     target += config.getRoot();
     target += request.url;
-    if (access(target.c_str(), F_OK | R_OK) == 0)
+    if ((request.method == GET) && (access(target.c_str(), (F_OK | R_OK)) == 0))
     {
-        int fileFd = open(target.c_str(), O_RDONLY);
+        int fileFd = open(target.c_str(), O_RDWR);
         if (fileFd > 0)
         {
-            std::cout << target << std::endl;
             File *res = new File(fileFd);
             requestList[static_cast<Buffer *>(res)] = std::make_pair(client, request);
+            struct kevent change;
             EV_SET(&change, fileFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-            return static_cast<Buffer *>(res);
+            changeList.push_back(change);
+            resList.push_back(static_cast<Buffer *>(res));
+            return (resList);
         }
         else
         {
             std::string header = makeResponse(request, 404, 0);
             std::cout << header << std::endl;
             client->getWriteBuffer().insert(client->getWriteBuffer().end(), header.begin(), header.end());
+            struct kevent change;
             EV_SET(&change, client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-            return 0;
+            changeList.push_back(change);
+            return resList;
         }
+    }
+    else if (request.method == POST)
+    {
+        std::map<std::string, std::string>::iterator it = request.headers.find("Content-Type");
+        if (it != request.headers.end())
+        {
+            size_t pos = it->second.find_last_of("boundary=", std::string::npos);
+            if (pos != std::string::npos)
+            {
+                std::string boder = it->second.substr(pos + 9, std::string::npos);
+                if (boder.size() > 0)
+                {
+                    MimeParser parser(boder);
+                    resList = parser.parse(config.getRoot());
+                    for (int i = 0; i < resList.size(); i++)
+                    {
+                        struct kevent change;
+                        EV_SET(&change, resList[i]->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+                        changeList.push_back(change);
+                    }
+                    for (int i = 0; i < resList.size(); i++)
+                    {
+                        std::cout << "file : " << i << std::endl;
+                        for (auto i : resList[i]->getWriteBuffer())
+                        {
+                            std::cout << i;
+                        }
+                        std::cout << "\n\n" << std::endl;
+                    }
+                    exit(1);
+                }
+            }
+        }
+        return (resList);
     }
     else
     {
         std::string header = makeResponse(request, 404, 0);
-        std::cout << header << std::endl;
         client->getWriteBuffer().insert(client->getWriteBuffer().end(), header.begin(), header.end());
+        struct kevent change;
         EV_SET(&change, client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-        return 0;
+        changeList.push_back(change);
+        return resList;
     }
 }
 
@@ -163,7 +205,7 @@ std::string Server::makeResponse(HttpRequest &request, int code, Buffer *buffer)
             response << request.httpVersion << " 404 Not found\r\n";
         }
         response << "Content-Type: " << getContentType(request.url) << "\r\n";
-        response << "Connection: close\r\n";
+        response << "Connection: keep-alive\r\n";
         if (buffer != 0)
         {
             response << "Content-Length: " << std::to_string(buffer->getReadBuffer().size()) << "\r\n";
@@ -178,7 +220,7 @@ std::string Server::makeResponse(HttpRequest &request, int code, Buffer *buffer)
         response << request.httpVersion << " 404 NOTFound\r\n";
         response << "Content-Type: text/html\r\n";
         response << "Content-Length: " << std::to_string(body.size()) << "\r\n";
-        response << "Connection: close\r\n";
+        response << "Connection: keep-alive\r\n";
         response << "\r\n";
         response << body;
     }

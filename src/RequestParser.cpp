@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/01 16:19:44 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:49:48 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,16 +69,41 @@ size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
 	}
 }
 
-size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size, size_t & endHeader)
+size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_t & endHeader)
 {
-	size_t pos = findEnd(buf, append, size);
+	std::vector<char> &buf = client->getReadBuffer();
+	size_t pos;
+	if (client->getHeaderFlag() == false)
+	{
+		std::cout << "header not end!" << std::endl;
+		pos = findEnd(buf, append, size);
+		if (pos != RequestParser::npos)
+		{
+			client->setHeaderFlag(true);
+			client->setHeaderEnd(pos);
+		}
+		else
+		{
+			client->setHeaderFlag(false);
+			client->setHeaderEnd(RequestParser::npos);
+		}
+	}
+	else 
+	{
+		std::cout << "already header end!" << std::endl;
+		buf.insert(buf.end(), append, append + size);
+		pos = client->getHeaderEnd();
+	}
 	endHeader = pos;
 	if (pos != RequestParser::npos) {
 		std::string content_header = "Content-Length:";
 		size_t content_len_pos = kmp(buf, content_header, 0);
-		if (content_len_pos == RequestParser::npos) {
+		if (content_len_pos == RequestParser::npos) 
+		{
 			// no need content
 			// message done
+			client->setHeaderFlag(false);
+			client->setHeaderEnd(RequestParser::npos);
 			return (pos);
 		}
 		else {
@@ -92,9 +117,10 @@ size_t RequestParser::checkEnd(std::vector<char> &buf, char *append, size_t size
 				temp += buf[k];
 			}
 			int content_len = std::atoi(temp.c_str());
-			if (content_len >= 0 && pos + 4 + content_len >= buf.size()) {
+			if (content_len >= 0 && pos + 4 + content_len <= buf.size()) {
 				// message done
-				
+				client->setHeaderFlag(false);
+				client->setHeaderEnd(RequestParser::npos);
 				return (pos + content_len);
 			}
 			else {

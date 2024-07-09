@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 16:58:12 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 13:12:09 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,13 +61,13 @@ int Webserv::checkNewClient(uintptr_t eventIdent) {
 		return -1;
 	}
 	else {
-		for (std::vector<Buffer *>::iterator it = bufferList.begin(); it != bufferList.end(); it++)
-		{
-			if ((*it)->getFd() == eventIdent)
-			{
-				return -1;
-			}
-		}
+		// for (std::vector<Buffer *>::iterator it = bufferList.begin(); it != bufferList.end(); it++)
+		// {
+		// 	if ((*it)->getFd() == eventIdent)
+		// 	{
+		// 		return -1;
+		// 	}
+		// }
 		// std::cout << "this is new client!" << std::endl;
 		return eventIdent; // new client
 	}
@@ -212,8 +212,8 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd)
 
 	// EOF NO
 	int clientFd = eventList[idx].ident; 
-	char buf[BUFFER_SIZE] = {0};
-	int n = read(clientFd, buf, BUFFER_SIZE);
+	char buf[200] = {0};
+	int n = read(clientFd, buf, 200);
 	// 예외처리
 	if (n == -1)
 	{
@@ -229,7 +229,7 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd)
 	// File == 2
 	if (isMessage(bufferIdx) == 2) {
 		bufferList[bufferIdx]->getReadBuffer().insert(bufferList[bufferIdx]->getReadBuffer().end(), buf, buf + n);
-		if (n != BUFFER_SIZE || n == 0)
+		if (n != 200 || n == 0)
 		{
 			closeFile(bufferIdx);
 			std::map<int, Server>::iterator server = serverList.find(serverFd);
@@ -251,33 +251,38 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd)
 	// 여기서 쭉쭉 내려가면 됨
 	RequestParser parser;
 	size_t endHeader;
-	size_t endIndex = parser.checkEnd(bufferList[bufferIdx]->getReadBuffer(), buf, n, endHeader);
+	Message *message = dynamic_cast<Message *>(bufferList[bufferIdx]);
+	size_t endIndex = parser.checkEnd(message, buf, n, endHeader);
     if (endIndex != RequestParser::npos)
     {
+		std::cout << "message end is " << endIndex << std::endl;
 		Buffer *buffer = bufferList[bufferIdx];
-		llParser parser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
+		llParser llparser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
 		try{
-			HttpRequest request = parser.parse();
+			HttpRequest request = llparser.parse();
 			std::map<int, Server>::iterator server = serverList.find(serverFd);
 			if (server != serverList.end())
 			{
-       			struct kevent client_event;
-				Buffer *file = server->second.processRequest(bufferList[bufferIdx], request, client_event);
-				if (file != 0)
+       			std::vector<struct kevent> client_event;
+				std::vector<Buffer *> file = server->second.processRequest(bufferList[bufferIdx], request, client_event);
+				for (int i = 0; i < file.size(); i++)
 				{
-					bufferList.push_back(static_cast<Buffer *>(file));
-					serverFdSet[file->getFd()] = serverFd;
+					bufferList.push_back(static_cast<Buffer *>(file[i]));
+					serverFdSet[file[i]->getFd()] = serverFd;
 				}
-				changeList.push_back(client_event);
+				changeList.insert(changeList.end(), client_event.begin(), client_event.end());
 			}
+			std::cout << "Parsing success" << std::endl;
 		}
 		catch (const std::runtime_error &e)
 		{
 			std::cerr << "Parsing error: " << e.what() << std::endl;
 		}
-		std::vector<char> temp =  std::vector<char>(buffer->getReadBuffer().begin() + endIndex + 4, buffer->getReadBuffer().end());
-		buffer->getReadBuffer().clear();
-		buffer->getReadBuffer() = temp;
+		buffer->getReadBuffer().erase(buffer->getReadBuffer().begin(), buffer->getReadBuffer().begin() + endIndex + 4);
+		// std::vector<char> temp =  std::vector<char>(buffer->getReadBuffer().begin() + endIndex + 4, buffer->getReadBuffer().end());
+		// buffer->getReadBuffer().clear();
+		// buffer->getReadBuffer() = temp;
+		std::cout << "buffer size = " << buffer->getReadBuffer().size() << std::endl;
 	}
 
 }
@@ -301,7 +306,7 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd)
 		return ;
 	}
 
-	std::cout << "Fd : " << bufferList[bufferIdx]->getFd() << " size :" << writeSize << std::endl;
+	//std::cout << "Fd : " << bufferList[bufferIdx]->getFd() << " size :" << writeSize << std::endl;
 	// 여기서 사이즈가 서로 다르다는건 버퍼 사이즈 한계로 다 못썼다는 뜻 다시ㄱㄱ
 	// 이터레이터로 어디까지 썼는지 알고 있어야 함
 	if (writeSize != bufferList[bufferIdx]->getWriteBuffer().size()){

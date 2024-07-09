@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 17:17:29 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/06 13:39:04 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,9 +38,9 @@ class Server {
 		size_t getListen();
 
 		void afterProcessRequest(Buffer *file, struct kevent &change);
-		Buffer *processRequest(Buffer *client, HttpRequest &request, struct kevent &change); 
+		std::vector<Buffer *> processRequest(Buffer *client, HttpRequest &request, std::vector<struct kevent> &changeList);
 		std::string makeResponse(HttpRequest &request, int code, Buffer *buffer);
-		void initServer(ServerConfig & config);œ
+		void initServer(ServerConfig & config);
 		bool findMatchingLocation(std::string & requestURL, Location & location);
 		void HttpRequestValidCheck(HttpRequest & request, int & code, std::string & message);
 		std::string makeErrorPage(int & code, std::string & message);

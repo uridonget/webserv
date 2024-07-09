@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:44:16 by heolee            #+#    #+#             */
-/*   Updated: 2024/07/08 22:10:00 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 18:37:11 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void Message::setHeaderEnd(size_t pos)
     headerEnd = pos;
 }
 
-const bool Message::getHeaderEnd() const
+const size_t Message::getHeaderEnd() const
 {
     return headerEnd;
 }

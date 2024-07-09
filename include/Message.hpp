@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:27:38 by heolee            #+#    #+#             */
-/*   Updated: 2024/07/08 21:32:39 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 18:37:27 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class Message : public Buffer {
 		void setHeaderFlag(bool flag);
 		const bool getHeaderFlag() const;
 		void setHeaderEnd(size_t pos);
-		const bool getHeaderEnd() const;
+		const size_t getHeaderEnd() const;
 		int whoAmI();
 
 };

@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/09 16:49:48 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 17:31:34 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,11 +75,12 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 	size_t pos;
 	if (client->getHeaderFlag() == false)
 	{
-		std::cout << "header not end!" << std::endl;
+		// std::cout << "header not end!" << std::endl;
 		pos = findEnd(buf, append, size);
 		if (pos != RequestParser::npos)
 		{
 			client->setHeaderFlag(true);
+			// std::cout << "Message header end position set : " << pos << std::endl;
 			client->setHeaderEnd(pos);
 		}
 		else
@@ -90,7 +91,7 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 	}
 	else 
 	{
-		std::cout << "already header end!" << std::endl;
+		// std::cout << "already header end!" << std::endl;
 		buf.insert(buf.end(), append, append + size);
 		pos = client->getHeaderEnd();
 	}
@@ -133,81 +134,81 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 	return (RequestParser::npos);
 }
 
-struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, size_t endIndex, size_t & endHeader) {
-	struct HttpRequest parsedRequest;
+// struct HttpRequest RequestParser::requestParsing(std::vector<char> fullRequest, size_t endIndex, size_t & endHeader) {
+// 	struct HttpRequest parsedRequest;
 		
-	std::string request(fullRequest.begin(), fullRequest.begin() + endIndex + 1);
+// 	std::string request(fullRequest.begin(), fullRequest.begin() + endIndex + 1);
 		
-	std::istringstream iss(request);
-	std::string line;
-	std::vector<std::string> tokens;
-	std::string temp;
+// 	std::istringstream iss(request);
+// 	std::string line;
+// 	std::vector<std::string> tokens;
+// 	std::string temp;
 
-	std::getline(iss, line);
-	tokens.clear();
-	std::istringstream lineStream(line);
-	while (lineStream >> temp) {
-		tokens.push_back(temp);
-	}
-	if (tokens.size() != 3) {
-		throw RuntimeException("invalid http request header1");
-	}
+// 	std::getline(iss, line);
+// 	tokens.clear();
+// 	std::istringstream lineStream(line);
+// 	while (lineStream >> temp) {
+// 		tokens.push_back(temp);
+// 	}
+// 	if (tokens.size() != 3) {
+// 		throw RuntimeException("invalid http request header1");
+// 	}
 
-	if (tokens[0] == "GET") {
-		parsedRequest.method = GET;
-	}
-	else if (tokens[0] == "POST") {
-		parsedRequest.method = GET;
-	}
-	else if (tokens[0] == "DELETE") {
-		parsedRequest.method = GET;
-	}
+// 	if (tokens[0] == "GET") {
+// 		parsedRequest.method = GET;
+// 	}
+// 	else if (tokens[0] == "POST") {
+// 		parsedRequest.method = GET;
+// 	}
+// 	else if (tokens[0] == "DELETE") {
+// 		parsedRequest.method = GET;
+// 	}
 
-	parsedRequest.url = tokens[1];
-	parsedRequest.httpVersion = tokens[2];
-	while (std::getline(iss, line)) {
-		tokens.clear();
-		std::istringstream lineStream(line);
-		while (lineStream >> temp) {
-			tokens.push_back(temp);
-		}
-		if (tokens[0] == "Host:") {
-			if (tokens.size() != 2)
-				throw RuntimeException("invalid http request header2");
-			parsedRequest.host = tokens[1];
-		}
-		else if (tokens[0] == "User-Agent:") {
-			std::string agent = "";
-			for (int i=1; i < tokens.size(); i++) {
-				agent += tokens[i];
-				agent += ' ';
-			}
-			parsedRequest.userAgent = agent;
-		}
-		else if (tokens[0] == "Accept:") {
-			if (tokens.size() != 2) {
-				throw RuntimeException("invalid http request header4");
-			}
-			parsedRequest.accept = tokens[1];
-		}
-		else if (tokens[0] == "Content-Length:") {
-			if (tokens.size() != 2) {
-				throw RuntimeException("invalid http request header4");
-			}
-			parsedRequest.contentLength = tokens[1];
-		}
-		else if (line.length() == 0) 
-			break ;
-	}
-	for (int i=0; endHeader + i < endIndex; i++) {
-		parsedRequest.body.push_back(request[i]);
-	}
-	return parsedRequest;
-}
+// 	parsedRequest.url = tokens[1];
+// 	parsedRequest.httpVersion = tokens[2];
+// 	while (std::getline(iss, line)) {
+// 		tokens.clear();
+// 		std::istringstream lineStream(line);
+// 		while (lineStream >> temp) {
+// 			tokens.push_back(temp);
+// 		}
+// 		if (tokens[0] == "Host:") {
+// 			if (tokens.size() != 2)
+// 				throw RuntimeException("invalid http request header2");
+// 			parsedRequest.host = tokens[1];
+// 		}
+// 		else if (tokens[0] == "User-Agent:") {
+// 			std::string agent = "";
+// 			for (int i=1; i < tokens.size(); i++) {
+// 				agent += tokens[i];
+// 				agent += ' ';
+// 			}
+// 			parsedRequest.userAgent = agent;
+// 		}
+// 		else if (tokens[0] == "Accept:") {
+// 			if (tokens.size() != 2) {
+// 				throw RuntimeException("invalid http request header4");
+// 			}
+// 			parsedRequest.accept = tokens[1];
+// 		}
+// 		else if (tokens[0] == "Content-Length:") {
+// 			if (tokens.size() != 2) {
+// 				throw RuntimeException("invalid http request header4");
+// 			}
+// 			parsedRequest.contentLength = tokens[1];
+// 		}
+// 		else if (line.length() == 0) 
+// 			break ;
+// 	}
+// 	for (int i=0; endHeader + i < endIndex; i++) {
+// 		parsedRequest.body.push_back(request[i]);
+// 	}
+// 	return parsedRequest;
+// }
 
-void RequestParser::setBody(HttpRequest & request, std::vector<char> & buf, size_t & endHeader, size_t & endIndex) {
-	if (endHeader != endIndex) {
-		request.body.reserve(request.body.size() + (endIndex - endHeader));
-		request.body.insert(request.body.end(), buf.begin() + endHeader + 4, buf.begin() + endIndex + 4);
-	}
-}
+// void RequestParser::setBody(HttpRequest & request, std::vector<char> & buf, size_t & endHeader, size_t & endIndex) {
+// 	if (endHeader != endIndex) {
+// 		request.body.reserve(request.body.size() + (endIndex - endHeader));
+// 		request.body.insert(request.body.end(), buf.begin() + endHeader + 4, buf.begin() + endIndex + 4);
+// 	}
+// }

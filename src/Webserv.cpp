@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 13:12:09 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 17:36:09 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -250,6 +250,9 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd)
 	// Message == 1
 	// 여기서 쭉쭉 내려가면 됨
 	RequestParser parser;
+	// std::cout << "----- buf read value -----" << std::endl;
+	write(1, buf, n);
+	// std::cout << "----- buf read value end -----" << std::endl;
 	size_t endHeader;
 	Message *message = dynamic_cast<Message *>(bufferList[bufferIdx]);
 	size_t endIndex = parser.checkEnd(message, buf, n, endHeader);
@@ -278,13 +281,12 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd)
 		{
 			std::cerr << "Parsing error: " << e.what() << std::endl;
 		}
-		buffer->getReadBuffer().erase(buffer->getReadBuffer().begin(), buffer->getReadBuffer().begin() + endIndex + 4);
-		// std::vector<char> temp =  std::vector<char>(buffer->getReadBuffer().begin() + endIndex + 4, buffer->getReadBuffer().end());
-		// buffer->getReadBuffer().clear();
-		// buffer->getReadBuffer() = temp;
+		// buffer->getReadBuffer().erase(buffer->getReadBuffer().begin(), buffer->getReadBuffer().begin() + endIndex + 3);
+		std::vector<char> temp =  std::vector<char>(buffer->getReadBuffer().begin() + endIndex + 4, buffer->getReadBuffer().end());
+		buffer->getReadBuffer().clear();
+		buffer->getReadBuffer() = temp;
 		std::cout << "buffer size = " << buffer->getReadBuffer().size() << std::endl;
 	}
-
 }
 
 void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) 

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 13:59:32 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:41:57 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,11 +50,11 @@ void Server::initServer(ServerConfig & config) {
 bool Server::findMatchingLocation(std::string & requestURL, Location & location) {
     std::vector<Location> locationList = config.getLocationList();
     bool res = false;
-    std::vector<std::string> splitUrl = ft_split(requestURL); // 0
+    std::vector<std::string> splitUrl = ft_split(requestURL, '/'); // 0
     std::vector<std::string> splitPath;
     for (std::vector<Location>::const_iterator it = locationList.begin(); it != locationList.end(); ++it) {
         const std::string &locPath = it->getPath();
-        splitPath = ft_split(locPath); // 0
+        splitPath = ft_split(locPath, '/');
         int j = splitUrl.size();
         int k = splitPath.size();
         if (j == 0 && k == 0) {
@@ -100,7 +100,6 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
     Location myLocation;
     bool isLocation = findMatchingLocation(request.url, myLocation);
     if (isLocation == false) { // there is no matching location
-        std::cout << "LOCATION FALSE" << std::endl;
         if (request.method != NONE) {
             std::set<METHOD> allowedMethod = config.getAllowedMethods();
             if (allowedMethod.find(request.method) == allowedMethod.end()) {
@@ -113,12 +112,11 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
         if (isDir == 1) {
             return 404;
         } else if (isDir == 2) {
-            // 아 몰라 나중에 수정
+            // ******************** 아 몰라 나중에 수정 **************************
         }
     }
     else // there is matching location => use location block configuration
     {
-        std::cout << "LOCATION TRUE" << std::endl;
         if (request.method != NONE) {
             std::set<METHOD> Allowed;
             if (myLocation.getAllowedMethods().size()) { // location에 allowedMethod가 있음
@@ -140,15 +138,17 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
         if (target[target.size() - 1] == '/') {
             target.erase(target.size() - 1);
         }
-        // std::cout << "TARGET : " << target << std::endl;
         target += request.url.substr(myLocation.getPath().length(), request.url.length());
-        // std::cout << "TARGET : " << target << std::endl;
         int isDir = isDirectory(target);
         if (isDir == 1) {
             return 404;
         } else if (isDir == 3) {
             if (request.url[request.url.size() - 1] != '/') {
                 request.url += '/';
+                if (!request.query.empty()) {
+                    request.url += '?';
+                    request.url += request.query;
+                }
                 return 301;
             } else if (request.url == "/") {
                 target += '/';

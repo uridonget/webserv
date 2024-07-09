@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 12:43:53 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 15:31:56 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,10 @@ class Server {
 		
 		int getServerFd() const;
 		
+		void parseQueryString(HttpRequest & request, const std::string& query);
+
+		void urlParsing(HttpRequest & request);
+
 		int checkValid(HttpRequest & request, std::string & target);
 
 		Buffer *processRequest(Buffer *client, HttpRequest &request, struct kevent &change); 

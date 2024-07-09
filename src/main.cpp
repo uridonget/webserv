@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 15:51:45 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 14:22:46 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,7 @@ int main(int ac, char *av[]) {
 		if (ac != 2)
 			throw RuntimeException("Invalid argument number");
 		webserv.configurationParsing(av[1]);
-		
 		webserv.initKqueue();
-		
 		webserv.makeServerList();
 		
 		webserv.registerServerWithChangeList();

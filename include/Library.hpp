@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 12:46:41 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:38:01 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 #include <cctype>
 #include <sys/stat.h>
 
-#define BUFFER_SIZE 500
+#define BUFFER_SIZE 8000
 #define MAX_BODY_SIZE 30000000
 #define READ_END "\r\n\r\n"
 
@@ -69,6 +69,8 @@ struct HttpRequest {
     std::string contentType;
     std::string contentLength;
     std::map<std::string, std::string> headers;
+    std::string query;
+    // std::map<std::string, std::string> query;
     int fd;
     std::vector<char> body;
 
@@ -79,12 +81,13 @@ struct HttpRequest {
         host(""), 
         userAgent(""), 
         accept(""),
-        contentLength("") {}
+        contentLength(""),
+        query("") {}
 };
 
 void	setNonblock(int fd);
 
-std::vector<std::string> ft_split(std::string str);
+std::vector<std::string> ft_split(std::string str, char c);
 
 int isDirectory(std::string & path);
 

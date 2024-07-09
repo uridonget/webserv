@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 14:08:20 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/05 12:33:42 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:37:34 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,31 @@ llParser::llParser(std::vector<char> &buffer, size_t endHeader) : stream(std::st
     nextChar();
 }
 
+static void urlParsing(HttpRequest & request, std::string rawUrl) {
+    std::string::size_type pos = rawUrl.find('?');
+    std::string tempUrl;
+    if (pos != std::string::npos) {
+        tempUrl = rawUrl.substr(0, pos);
+        request.query = rawUrl.substr(pos + 1);
+    } else {
+        tempUrl = rawUrl;
+    }
+    std::string res = "/";
+    std::vector<std::string> splitUrl = ft_split(tempUrl, '/');
+    if (!splitUrl.empty()) {
+        std::vector<std::string>::iterator it = splitUrl.begin();
+        for (; it != splitUrl.end() - 1; ++it) {
+            res += *it;
+            res += '/';
+        }
+        res += *it;
+    }
+    if (!tempUrl.empty() && tempUrl[tempUrl.size() - 1] == '/') {
+        res += '/';
+    }
+    request.url = res;
+}
+
 HttpRequest llParser::parse()
 {
 	HttpRequest request;
@@ -37,7 +62,7 @@ HttpRequest llParser::parse()
 		request.method = DELETE;
 	}
 	consumeSP();
-	request.url = parseToken();
+    urlParsing(request, parseToken());
 	consumeSP();
 	request.httpVersion = parseToken();
 	consumeCRLF();

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:46:15 by heolee            #+#    #+#             */
-/*   Updated: 2024/07/09 11:38:31 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 15:24:21 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,11 @@ std::string readFile(const char* filename) {
 	return content;
 }
 
-std::vector<std::string> ft_split(std::string str) {
+std::vector<std::string> ft_split(std::string str, char c) {
     std::vector<std::string> words;
     std::stringstream sstream(str);
     std::string word;
-    while (getline(sstream, word, '/')) {
+    while (getline(sstream, word, c)) {
         if (word == "..") {
             if (!words.empty())
                 words.pop_back();

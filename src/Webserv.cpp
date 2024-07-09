@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 12:44:50 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:39:03 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,6 +110,9 @@ void printHttpRequest(const HttpRequest& request) {
     }
     if (!request.url.empty()) {
         std::cout << "URL: " << request.url << std::endl;
+    }
+	if (!request.query.empty()) {
+        std::cout << "Query: " << request.query << std::endl;
     }
     if (!request.httpVersion.empty()) {
         std::cout << "HTTP Version: " << request.httpVersion << std::endl;

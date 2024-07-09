@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 15:31:56 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 17:26:29 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ class Server {
 
 		void afterProcessRequest(Buffer *file, struct kevent &change); // file을 열 수 있는지 확인하고 존재하면 buffer(파일)을 생성한다.
 		
-		std::string makeResponse(HttpRequest &request, int code, Buffer *buffer);
+		std::string makeResponseWithNoBody(HttpRequest &request, int code);
 
 		void initServer(ServerConfig & config);
 		

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 16:41:57 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/09 17:30:57 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -193,37 +193,11 @@ Buffer* Server::processRequest(Buffer *client, HttpRequest &request, struct keve
         code = 404;
     }
     if (code != 200) {
-        std::string message;
-        if (code == 400) {
-            message = ERR400;
-        } else if (code == 403) {
-            message = ERR403;
-        } else if (code == 404) {
-            message = ERR404;
-        } else if (code == 405) {
-            message = ERR405;
-        } else if (code == 408) {
-            message = ERR408;
-        } else if (code == 411) {
-            message = ERR411;
-        } else if (code == 413) {
-            message = ERR413;
-        } else if (code == 415) {
-            message = ERR415;
-        } else if (code == 301) {
-            message = "Moved Permanently";
-        }
-        std::string body = "";
-        if (code / 100 == 4) {
-            body = makeErrorPage(code, message);
-        }
-        std::string response = makeHeader(request, code, message, body);
-        response += body;
+        std::string response = makeResponseWithNoBody(request, code);
         client->getWriteBuffer().insert(client->getWriteBuffer().end(), response.begin(), response.end());
         EV_SET(&change, client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
         std::cout << "\n<RESPONSE>\n";
         std::cout << response << std::endl;
-        return 0;
     }
     return 0;
 }
@@ -264,37 +238,37 @@ static std::string getContentType(std::string url)
     return res;
 }
 
-std::string Server::makeResponse(HttpRequest &request, int code, Buffer *buffer) {
+std::string Server::makeResponseWithNoBody(HttpRequest &request, int code) {
 	std::ostringstream response;
+    std::string body;
+    std::string header;
+    std::string message;
 
-    if (request.method == GET) 
-    {
-        if (code == 200)
-        {
-            response << request.httpVersion << " 200 OK\r\n";
+    if (request.method == GET) {
+        if (code / 100 == 3) {
+            message = "Moved Permanently";
+            body = "";    
+        } else if (code / 100 == 4) {
+            if (code == 400) {
+                message = ERR400;
+            } else if (code == 403) {
+                message = ERR403;
+            } else if (code == 404) {
+                message = ERR404;
+            } else if (code == 405) {
+                message = ERR405;
+            } else if (code == 408) {
+                message = ERR408;
+            } else if (code == 411) {
+                message = ERR411;
+            } else if (code == 413) {
+                message = ERR413;
+            } else if (code == 415) {
+                message = ERR415;
+            } 
+            body = makeErrorPage(code, message);
         }
-        else
-        {
-            response << request.httpVersion << " 404 Not found\r\n";
-        }
-        response << "Content-Type: " << getContentType(request.url) << "\r\n";
-        response << "Connection: close\r\n";
-        if (buffer != 0)
-        {
-            response << "Content-Length: " << std::to_string(buffer->getReadBuffer().size()) << "\r\n";
-        }
-        else
-        {
-            response << "Content-Length: 0" << "\r\n";
-        }
-        response << "\r\n";
-    } else {
-        std::string body = "<html><body><h1>403 Not Found</h1></body></html>";
-        response << request.httpVersion << " 404 NOTFound\r\n";
-        response << "Content-Type: text/html\r\n";
-        response << "Content-Length: " << std::to_string(body.size()) << "\r\n";
-        response << "Connection: close\r\n";
-        response << "\r\n";
+        response << makeHeader(request, code, message, body);
         response << body;
     }
     return response.str();
@@ -348,24 +322,24 @@ std::string Server::makeErrorPage(int & code, std::string & message) {
     return oss.str();
 }
 
-// std::string readFromPipe(int pipeFd) {
-//     const size_t bufferSize = 1000;
-//     std::vector<char> buffer(bufferSize);
-//     std::string result;
+std::string readFromPipe(int pipeFd) {
+    const size_t bufferSize = 1000;
+    std::vector<char> buffer(bufferSize);
+    std::string result;
 
-//     while (true) {
-//         ssize_t bytesRead = read(pipeFd, buffer.data(), bufferSize);
-//         if (bytesRead < 0) {
-//             break;
-//         }
-//         if (bytesRead == 0) {
-//             break;
-//         }
-//         result.append(buffer.data(), bytesRead);
-//     }
-//     result.push_back(0);
-//     return (result);
-// }
+    while (true) {
+        ssize_t bytesRead = read(pipeFd, buffer.data(), bufferSize);
+        if (bytesRead < 0) {
+            break;
+        }
+        if (bytesRead == 0) {
+            break;
+        }
+        result.append(buffer.data(), bytesRead);
+    }
+    result.push_back(0);
+    return (result);
+}
 
 // std::string Server::makeBody(HttpRequest & request, int & code, std::string & message) {
 //     if (code != 200) {

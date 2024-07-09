@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   IoMultiplexing.cpp                                 :+:      :+:    :+:   */
+/*   WebservUtils.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: heolee <heolee@student.42seoul.kr>         +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:46:15 by heolee            #+#    #+#             */
-/*   Updated: 2024/06/25 16:46:15 by heolee           ###   ########.fr       */
+/*   Updated: 2024/07/05 11:15:03 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,9 +35,6 @@ void Webserv::closeFile(int bufferIdx) {
 	EV_SET(&fileEvent, bufferList[bufferIdx]->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	changeList.push_back(fileEvent);
 	close(bufferList[bufferIdx]->getFd());
-
-	// push server
-
 }
 
 void Webserv::successResponse(int bufferIdx) {

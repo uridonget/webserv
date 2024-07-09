@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerConfig.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:31:23 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 16:56:24 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/09 12:44:53 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ void ServerConfig::parseConfig(const std::string& configString) {
 			inLocationBlock = true;
 		}
 		else if (tokens[0] == "root") {
-			if (tokens.size() != 2 || !checkSemiColon(tokens))
+			if (tokens.size() < 2 || !checkSemiColon(tokens))
 				throw RuntimeException("invalid root in configuration file");
 			if (inLocationBlock) {
 				currentLocation.setRoot(tokens[1]);
@@ -200,7 +200,7 @@ void ServerConfig::printConfig() {
 }
 
 size_t ServerConfig::getListen() const {
-    return (this->listen);
+    return listen;
 }
 
 std::string ServerConfig::getServerName() const {

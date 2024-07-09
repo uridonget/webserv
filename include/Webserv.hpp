@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 10:49:19 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/04 15:48:08 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/05 12:59:42 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,12 @@ class Server;
 
 class Webserv {
 	private:
+		Webserv(const Webserv & other);
+		Webserv & operator=(const Webserv & other);
+		
 		ConfigParsing						configParsing; // configuration file parsing
-		std::map<int, Server> 				serverList; // <port, Server>
-		// std::set<int> serverFdSet;
-		std::map<int, int> 					serverFdSet; // <Client fd, Server fd> serverFdMap
+		std::map<int, Server> 				serverList;    // <Server fd, Server>
+		std::map<int, int> serverFdMap; 				   // <Client fd, Server fd>
 		int kq;
 		std::vector<struct kevent> changeList;
 		struct kevent eventList[10];
@@ -38,21 +40,18 @@ class Webserv {
 	public:
 		Webserv();
 		~Webserv();
-
-		void makeServerConfigStringList(const std::string & configPath);
-		std::vector<ServerConfig> getServerConfigs();
-		void makeServerList();
-		void initKqueue();
-		void connectKqueueToServer();
-
-		bool checkSocketError(int idx, int bufferIdx);
-		void runServers();
 		
-		int checkNewClient(uintptr_t enventIdent);
+		void configurationParsing(const std::string & configPath);
+		void initKqueue();
+		void makeServerList();
+		void registerServerWithChangeList();
 
+		bool checkSocketError(int idx);
+		int	checkNewClient(uintptr_t enventIdent);
 		void newClient(int serverFd);
 		void readEvent(int idx, int bufferIdx, int serverFd);
 		void writeEvent(int idx, int bufferIdx, int serverFd);
+		void runServers();
 
 		// websev utils
 		int isMessage(int bufferIdx);

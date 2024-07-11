@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/09 19:44:33 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 15:46:44 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,70 +73,63 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 {
 	std::vector<char> &buf = client->getReadBuffer();
 	size_t pos;
-	if (client->getHeaderFlag() == false)
-	{
-		// std::cout << "header not end!" << std::endl;
+	if (client->getHeaderFlag() == false) { // header end 발견 X
 		pos = findEnd(buf, append, size);
-		if (pos != RequestParser::npos)
-		{
+		if (pos != RequestParser::npos) { // header end 발견!
 			client->setHeaderFlag(true);
-			// std::cout << "Message header end position set : " << pos << std::endl;
 			client->setHeaderEnd(pos);
-		}
-		else
-		{
+		} else { // header end 없어요
 			client->setHeaderFlag(false);
 			client->setHeaderEnd(RequestParser::npos);
+			// return (RequestParser::npos);
 		}
-	}
-	else 
-	{
-		// std::cout << "already header end!" << std::endl;
+	} else { // header end 발견 O
 		buf.insert(buf.end(), append, append + size);
 		pos = client->getHeaderEnd();
 	}
 	endHeader = pos;
-	if (pos != RequestParser::npos) {
-		std::string content_header = "Content-Length:";
-		size_t content_len_pos = kmp(buf, content_header, 0);
-		if (content_len_pos == RequestParser::npos) 
-		{
-			// no need content
-			// message done
+	if (client->getHeaderFlag() == true) {
+		size_t contentLen = client->getContentLength();
+		if (contentLen == 0) { // 아직 안 찾아봄
+			std::string content_header = "Content-Length:";
+			size_t content_len_pos = kmp(buf, content_header, 0);
+			if (content_len_pos == RequestParser::npos) { 
+				// content length 못찾음
+				client->setHeaderFlag(false);
+				client->setHeaderEnd(RequestParser::npos);
+				return (pos);
+			} else { 
+				// content length 찾았음
+				int content_len_tail = content_len_pos; 
+				while (buf[content_len_tail] != '\r') {
+					content_len_tail++;
+				}
+				std::string temp;
+				for (int k = content_len_pos + content_header.size(); k < content_len_tail; k++) {
+					temp += buf[k];
+				}
+				contentLen = std::atoi(temp.c_str());
+				client->setContentLength(contentLen);
+				if (contentLen >= 0 && pos + 4 + contentLen <= buf.size()) {
+					// message done
+					client->setHeaderFlag(false);
+					client->setHeaderEnd(RequestParser::npos);
+					return (pos + contentLen);
+				} else {
+					// need more body
+					return (RequestParser::npos);
+				}
+			}
+		} else if (contentLen == RequestParser::npos) { // 찾아봤는데 없음
 			client->setHeaderFlag(false);
 			client->setHeaderEnd(RequestParser::npos);
 			return (pos);
-		}
-		else {
-			// need content
-			int content_len_tail = content_len_pos; 
-			while (buf[content_len_tail] != '\r') {
-				content_len_tail++;
-			}
-			std::string temp;
-			for (int k = content_len_pos + content_header.size(); k < content_len_tail; k++) {
-				temp += buf[k];
-			}
-			int content_len = std::atoi(temp.c_str());
-			if (content_len >= 0 && pos + 4 + content_len <= buf.size()) {
-				// message done
-				client->setHeaderFlag(false);
-				client->setHeaderEnd(RequestParser::npos);
-				return (pos + content_len);
-			}
-			else {
-				// need more body
-				return (RequestParser::npos);
-			}
+		} else { // 찾았음
+			client->setHeaderFlag(false);
+			client->setHeaderEnd(RequestParser::npos);
+			return (pos + contentLen);
 		}
 	}
 	// header not done
 	return (RequestParser::npos);
 }
-
-// void RequestParser::setBody(HttpRequest & request, std::vector<char> & buf, size_t & endHeader, size_t & endIndex) {
-// 	if (endHeader != endIndex) {
-// 		request.body.reserve(request.body.size() + (endIndex - endHeader));
-// 		request.body.insert(request.body.end(), buf.begin() + endHeader + 4, buf.begin() + endIndex + 4);
-// 	}
-// }

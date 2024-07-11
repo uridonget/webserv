@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Library.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 19:28:05 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 16:26:10 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,7 @@ struct HttpRequest {
     std::string query;
     // std::map<std::string, std::string> query;
     int fd;
+    size_t fileCount;
     std::vector<char> body;
 
     HttpRequest()

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 19:33:08 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 20:14:44 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,8 @@ void Server::initServer(ServerConfig & config) {
 	}
 }
 
-bool Server::findMatchingLocation(std::string & requestURL, Location & location) {
+bool Server::findMatchingLocation(std::string & requestURL, Location & location) 
+{
     std::vector<Location> locationList = config.getLocationList();
     bool res = false;
     std::vector<std::string> splitUrl = ft_split(requestURL, '/'); // 0
@@ -77,20 +78,34 @@ bool Server::findMatchingLocation(std::string & requestURL, Location & location)
     return res;
 }
 
-void Server::afterProcessRequest(Buffer *file, struct kevent &change)
+int Server::afterProcessRequest(Buffer *file, struct kevent &change)
 {  
-    std::map<Buffer *, std::pair<Buffer *, HttpRequest> >::iterator it = requestList.find(file);
+    std::cout << "file end!" << std::endl;
+    std::map<Buffer *, std::pair<Buffer *, HttpRequest*> >::iterator it = requestList.find(file);
     if (it != requestList.end()) {
-        Buffer *res = it->second.first;
-        std::string body(file->getReadBuffer().begin(), file->getReadBuffer().end());
-        int code = 200;
-        std::string message = "OK";
-        std::string header = makeHeader(it->second.second, code, message, body);
-        res->getWriteBuffer().insert(res->getWriteBuffer().end(), header.begin(), header.end());
-        res->getWriteBuffer().insert(res->getWriteBuffer().end(), body.begin(), body.end());
-        requestList.erase(file);
-        EV_SET(&change, res->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+        if (it->second.second->fileCount == 1)
+        {
+            Buffer *res = it->second.first;
+            std::string body(file->getReadBuffer().begin(), file->getReadBuffer().end());
+            int code = 200;
+            std::string message = "OK";
+            std::string header = makeHeader(*(it->second.second), code, message, body);
+            res->getWriteBuffer().insert(res->getWriteBuffer().end(), header.begin(), header.end());
+            res->getWriteBuffer().insert(res->getWriteBuffer().end(), body.begin(), body.end());
+            EV_SET(&change, res->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+            delete it->second.second;
+            requestList.erase(file);
+            std::cout << "response created!" << std::endl;
+            return 1;
+        }
+        else
+        {
+            std::cout << "file count" << it->second.second->fileCount << std::endl;
+            it->second.second->fileCount -= 1;
+            requestList.erase(file);
+        }
     }
+    return 0;
 }
 
 int Server::checkValid(HttpRequest & request, std::string & target) {
@@ -100,6 +115,7 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
     Location myLocation;
     bool isLocation = findMatchingLocation(request.url, myLocation);
     if (isLocation == false) { // there is no matching location
+        std::cout << "LOCATION FALSE" << std::endl;
         if (request.method != NONE) {
             std::set<METHOD> allowedMethod = config.getAllowedMethods();
             if (allowedMethod.find(request.method) == allowedMethod.end()) {
@@ -117,6 +133,7 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
     }
     else // there is matching location => use location block configuration
     {
+        std::cout << "LOCATION TRUE" << std::endl;
         if (request.method != NONE) {
             std::set<METHOD> Allowed;
             if (myLocation.getAllowedMethods().size()) { // location에 allowedMethod가 있음
@@ -135,22 +152,18 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
         } else {
             return 404;
         }
-        if (target[target.size() - 1] == '/') {
-            target.erase(target.size() - 1);
-        }
+        std::cout << "TARGET : " << target << std::endl;
+        // if (target[target.size() - 1] == '/') {
+        //     target.erase(target.size() - 1);
+        // }
+        
         target += request.url.substr(myLocation.getPath().length(), request.url.length());
+        std::cout << "TARGET : " << target << std::endl;
         int isDir = isDirectory(target);
         if (isDir == 1) {
             return 404;
         } else if (isDir == 3) {
-            if (request.url[request.url.size() - 1] != '/') {
-                request.url += '/';
-                if (!request.query.empty()) {
-                    request.url += '?';
-                    request.url += request.query;
-                }
-                return 301;
-            } else if (request.url == "/") {
+            if (request.url == "/") {
                 target += '/';
                 if (myLocation.getIndex() != "") {
                     target += myLocation.getIndex();
@@ -175,31 +188,77 @@ int Server::checkValid(HttpRequest & request, std::string & target) {
     return 200;
 }
 
-Buffer* Server::processRequest(Buffer *client, HttpRequest &request, struct kevent &change)
+static void pushEvent(int fd, int filter, int flag, std::vector <struct kevent> &changeList)
+{
+    struct kevent change;
+    EV_SET(&change, fd, filter, flag, 0, 0, NULL);
+    changeList.push_back(change);
+}
+
+std::vector<Buffer*> Server::processRequest(Buffer *client, HttpRequest &request, std::vector <struct kevent> &changeList)
 {
     std::string target;
+    std::vector<Buffer *> resList;
     int code = checkValid(request, target);
     if (code == 200) {
-        if (access(target.c_str(), F_OK | R_OK) == 0) {
+        if (request.method == GET && access(target.c_str(), F_OK | R_OK) == 0) {
             int fileFd = open(target.c_str(), O_RDONLY);
             if (fileFd > 0) // file open ok
             {
                 File *res = new File(fileFd);
-                requestList[static_cast<Buffer *>(res)] = std::make_pair(client, request);
-                EV_SET(&change, fileFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-                return static_cast<Buffer *>(res);
+                resList.push_back(static_cast<Buffer *>(res));
+                HttpRequest *request_share = new HttpRequest;
+                *request_share = request;
+                request_share->fileCount = 1;
+                requestList[static_cast<Buffer *>(res)] = std::make_pair(client, request_share);
+                pushEvent(fileFd, EVFILT_READ, EV_ADD | EV_ENABLE, changeList);
+                return resList;
             }
         }
-        code = 404;
+        else if (request.method == POST)
+        {
+            std::map<std::string, std::string>::iterator contentType = request.headers.find("Content-Type");
+            std::string boundary = "";
+            if (contentType != request.headers.end())
+            {
+                if (contentType->second.find("multipart/form-data;") != std::string::npos)
+                {
+                    size_t pos = contentType->second.find("boundary=");
+                    if (pos != std::string::npos)
+                    {
+                        boundary = contentType->second.substr(pos + 9, std::string::npos);
+                    }
+                }    
+            }
+            if (boundary.size() != 0)
+            {
+                MimeParser parser(boundary, request.body);
+                resList = parser.parse(config.getRoot());
+                if (resList.size() > 0)
+                {
+                    HttpRequest *request_share = new HttpRequest;
+                    *request_share = request;
+                    request_share->fileCount = resList.size();
+                    for(int i= 0 ; i < resList.size(); i++)
+                    {
+                        pushEvent(resList[i]->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, changeList);
+                        requestList[static_cast<Buffer *>(resList[i])] = std::make_pair(client, request_share);
+                    }
+                    return resList;
+                }
+            }
+            code = 400;
+        }
+        else
+            code = 404;
     }
     if (code != 200) {
+        std::cout << "code : " << code << std::endl;
         std::string response = makeResponseWithNoBody(request, code);
         client->getWriteBuffer().insert(client->getWriteBuffer().end(), response.begin(), response.end());
-        EV_SET(&change, client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-        std::cout << "\n<RESPONSE>\n";
-        std::cout << response << std::endl;
+        pushEvent(client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE, changeList);
     }
-    return 0;
+    return resList;
 }
 
 static std::string getContentType(std::string url)
@@ -244,7 +303,7 @@ std::string Server::makeResponseWithNoBody(HttpRequest &request, int code) {
     std::string header;
     std::string message;
 
-    if (request.method == GET) {
+    // if (request.method == GET) {
         if (code / 100 == 3) {
             message = "Moved Permanently";
             body = "";    
@@ -270,7 +329,7 @@ std::string Server::makeResponseWithNoBody(HttpRequest &request, int code) {
         }
         response << makeHeader(request, code, message, body);
         response << body;
-    }
+    // }
     return response.str();
 }
 
@@ -369,7 +428,6 @@ std::string Server::makeErrorPage(int & code, std::string & message) {
 //         close(pipefd[1]);
 //         close(pipeOut[0]);
 //         close(pipeOut[1]);
-
 //         std::string fileName = "cgi-bin/hello.py";
 //         std::vector<char *> exec_args;
 //         exec_args.push_back(const_cast<char *>(fileName.c_str()));
@@ -383,7 +441,6 @@ std::string Server::makeErrorPage(int & code, std::string & message) {
 //         int status;
 //         std::vector<char> buffer(BUFFER_SIZE);
 //         std::string result;
-
 //         close(pipefd[0]);
 //         close(pipefd[1]);
 //         close(pipeOut[1]);

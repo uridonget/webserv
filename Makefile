@@ -5,37 +5,38 @@
 #                                                     +:+ +:+         +:+      #
 #    By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2024/04/12 10:20:27 by haejeong          #+#    #+#              #
-#    Updated: 2024/07/09 13:07:01 by sangyhan         ###   ########.fr        #
+#    Created: 2024/07/11 15:42:22 by sangyhan          #+#    #+#              #
+#    Updated: 2024/07/11 19:52:56 by sangyhan         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME	 = webserv
+NAME     = webserv
 
-CXX		 = c++
-
+CXX      = c++
 CXXFLAGS = -g # -Wall -Wextra -Werror -std=c++98
 
-SRCS	 = $(wildcard src/*.cpp)
+SRCS     = $(wildcard src/*.cpp)
+INCS     = $(wildcard include/*.hpp)
+OBJDIR   = obj
+OBJS     = $(SRCS:src/%.cpp=$(OBJDIR)/%.o)
 
-INCS	 = $(wildcard include/*.hpp)
+all: $(OBJDIR) $(NAME)
 
-OBJS	 = $(SRCS:.cpp=.o)
-
-all	: $(NAME)
-
-$(NAME) : $(OBJS)
+$(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 
-%.o : %.cpp $(INCS)
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+$(OBJDIR)/%.o: src/%.cpp $(INCS)
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-clean 	:
-	rm -rf $(OBJS)
+clean:
+	rm -rf $(OBJDIR)
 
-fclean  : clean
+fclean: clean
 	rm -rf $(NAME)
 
-re		: fclean all
+re: fclean all
 
-.PHONY : all clean fclean re
+.PHONY: all clean fclean re

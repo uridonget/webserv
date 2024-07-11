@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 14:57:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 14:22:46 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 13:40:04 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,7 @@ int main(int ac, char *av[]) {
 
 	} catch (const RuntimeException& e) {
 		std::cerr << "Error : " << e.what() << std::endl;
-		return 1;
+		std::exit(1);
 	}
-
 	return 0;
 }

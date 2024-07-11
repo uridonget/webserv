@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/11 16:06:18 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 22:32:33 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,47 @@ size_t RequestParser::findEnd(std::vector<char> &buf, char *append, size_t size)
 	}
 }
 
+// 리턴값 false : 더 읽어. 리턴값 true : 그만 읽어.
+bool RequestParser::chunkParsing(std::vector<char> &buf, Message *client, bool & endFlag) {
+	size_t chunkStart = client->getChunkStart();
+	std::istringstream stream(std::string(buf.begin() + chunkStart, buf.end()));
+    std::string hexNum;
+
+	std::getline(stream, hexNum, '\r');
+    if (stream.get() != '\n' || hexNum.empty()) {
+        return false; // \r\n 체크 및 hexNum 비어있는지 체크
+    }
+	for (size_t i = 0; i < hexNum.size(); ++i) {
+        if (!isHexDigit(hexNum[i])) {
+            return false;
+        }
+    }
+	int num = hexToDecimal(hexNum);
+	
+	std::string data;
+	if (buf.size() < chunkStart + 1 + num) {
+		num = buf.size() - chunkStart - 1;
+		// return false;
+	}
+	data.resize(num);
+	stream.read(&data[0], num);
+	if (stream.get() != '\r' || stream.get() != '\n') {
+        return false; // 문자열 후에 \r\n 체크
+    }
+	std::cout << "NUM  : " << num << std::endl;
+	std::cout << "READ : [" << data.c_str() << "]" << std::endl;
+	buf.erase(buf.begin() + chunkStart, buf.begin() + chunkStart + hexNum.size() + 4 + num);
+	if (data.size() > 0)
+		buf.insert(buf.begin() + chunkStart, data.begin(), data.end());
+	
+	client->setChunkStart(chunkStart + num);
+	if (num == 0) {
+		endFlag = true;
+		return false;
+	}
+	return true;
+}
+
 size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_t & endHeader)
 {
 	std::vector<char> &buf = client->getReadBuffer();
@@ -79,6 +120,11 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 		if (pos != RequestParser::npos) { // header end 발견!
 			client->setHeaderFlag(true);
 			client->setHeaderEnd(pos);
+			std::string chunk_header = "Transfer-Encoding: chunked";
+			if (kmp(buf, chunk_header, 0) != RequestParser::npos) {
+				client->setChunkFlag(true);
+				client->setChunkStart(pos + 4);
+			}
 			std::string content_header = "Content-Length:";
 			size_t content_len_pos = kmp(buf, content_header, 0);
 			if (content_len_pos != RequestParser::npos) {
@@ -96,7 +142,7 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 		} else { // header end 없어요
 			client->setHeaderFlag(false);
 			client->setHeaderEnd(RequestParser::npos);
-			// return (RequestParser::npos);
+			return (RequestParser::npos); // 더 읽어
 		}
 	} else { // header end 발견 O
 		buf.insert(buf.end(), append, append + size);
@@ -105,7 +151,45 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 	endHeader = pos;
 	if (client->getHeaderFlag() == true) {
 		contentLen = client->getContentLength();
-		if (contentLen == RequestParser::npos) {
+		if (client->getChunkFlag() == true) {
+			bool endFlag = false;
+			while (true) {
+				if (chunkParsing(buf, client, endFlag) == true) {
+					
+				} else {
+					break ;
+				}
+			}
+			if (endFlag == true) {
+				// 그만 읽어
+				client->setHeaderFlag(false);
+				client->setHeaderEnd(RequestParser::npos);
+				client->setContentLength(RequestParser::npos);
+				client->setChunkFlag(false);
+				size_t end = client->getChunkStart();
+				std::cout << "END : " << end << std::endl;
+				client->setChunkStart(0);
+				std::string check(buf.begin(), buf.end());
+				// try{
+				
+				// }
+				// catch (std::exception &e)
+				// {
+				// 	std::cerr 
+				// }
+				std::cout << "<FULL BUFFER>" << std::endl;
+				std::cout << "pos : " << pos << " end : " << end << std::endl;
+				std::cout << check << std::endl;
+				return (end);
+			} else {
+				// 더 읽어
+				client->setHeaderFlag(true);
+				client->setHeaderEnd(pos);
+				client->setChunkFlag(true);
+				
+				return (RequestParser::npos);
+			}
+		} else if (contentLen == RequestParser::npos) { // content length 없음
 			client->setHeaderFlag(false);
 			client->setHeaderEnd(RequestParser::npos);
 			return (pos);

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 19:28:05 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 19:57:59 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,10 @@ void	setNonblock(int fd);
 std::vector<std::string> ft_split(std::string str, char c);
 
 int isDirectory(std::string & path);
+
+bool isHexDigit(char c);
+
+int hexToDecimal(const std::string & hex);
 
 class RuntimeException : public std::runtime_error {
 public:

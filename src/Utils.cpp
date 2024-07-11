@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:46:15 by heolee            #+#    #+#             */
-/*   Updated: 2024/07/09 15:24:21 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 19:57:58 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,4 +59,16 @@ int isDirectory(std::string & path) {
     } else {
         return 3; // 경로에 파일이 있고 그 파일이 디렉토리임
     }
+}
+
+bool isHexDigit(char c) {
+    return std::isxdigit(static_cast<unsigned char>(c));
+}
+
+int hexToDecimal(const std::string & hex) {
+    int decimal;
+    std::stringstream ss;
+    ss << std::hex << hex;
+    ss >> decimal;
+    return decimal;
 }

@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/11 15:51:40 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 21:30:47 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,11 +124,11 @@ void printHttpRequest(const HttpRequest& request) {
         std::cout << "Content-Length: " << request.contentLength << std::endl;
     }
     if (!request.body.empty()) {
-        std::cout << "Body: ";
+        std::cout << "Body: [";
         for (std::vector<char>::const_iterator it = request.body.begin(); it != request.body.end(); ++it) {
             std::cout << *it;
         }
-        std::cout << std::endl;
+        std::cout << "]" << std::endl;
     }
 }
 
@@ -192,8 +192,7 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 	size_t endHeader;
 	Message *message = dynamic_cast<Message *>(bufferList[bufferIdx]);
 	size_t endIndex = parser.checkEnd(message, buf, n, endHeader);
-    if (endIndex != RequestParser::npos)
-    {
+    if (endIndex != RequestParser::npos) {
 		Buffer *buffer = bufferList[bufferIdx];
 		llParser llparser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
 		try{

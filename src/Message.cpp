@@ -6,13 +6,18 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:44:16 by heolee            #+#    #+#             */
-/*   Updated: 2024/07/11 15:58:04 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 19:45:48 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Message.hpp"
 
-Message::Message(int fd) : Buffer(fd), headerFlag(false), headerEnd(18446744073709551615UL), contentLength(18446744073709551615UL) {}
+Message::Message(int fd) : 
+Buffer(fd), 
+headerFlag(false), 
+headerEnd(18446744073709551615UL), 
+contentLength(18446744073709551615UL),
+chunkStart(0) {}
 
 Message::~Message() {}
 
@@ -46,4 +51,20 @@ void Message::setContentLength(size_t len) {
 
 const size_t Message::getContentLength() const {
     return contentLength;
+}
+
+void Message::setChunkFlag(bool flag) {
+    chunkFlag = flag;
+}
+
+const bool Message::getChunkFlag() const {
+    return chunkFlag;
+}
+
+void Message::setChunkStart(size_t pos) {
+    chunkStart = pos;
+}
+
+const size_t Message::getChunkStart() const {
+    return chunkStart;
 }

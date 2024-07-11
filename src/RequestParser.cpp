@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/11 15:46:44 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 16:06:18 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,11 +73,26 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 {
 	std::vector<char> &buf = client->getReadBuffer();
 	size_t pos;
+	size_t contentLen;
 	if (client->getHeaderFlag() == false) { // header end 발견 X
 		pos = findEnd(buf, append, size);
 		if (pos != RequestParser::npos) { // header end 발견!
 			client->setHeaderFlag(true);
 			client->setHeaderEnd(pos);
+			std::string content_header = "Content-Length:";
+			size_t content_len_pos = kmp(buf, content_header, 0);
+			if (content_len_pos != RequestParser::npos) {
+				int content_len_tail = content_len_pos;
+				while (buf[content_len_tail] != '\r') {
+					content_len_tail++;
+				}
+				std::string temp;
+				for (int k = content_len_pos + content_header.size(); k < content_len_tail; k++) {
+					temp += buf[k];
+				}
+				contentLen = std::atoi(temp.c_str());
+				client->setContentLength(contentLen);
+			}
 		} else { // header end 없어요
 			client->setHeaderFlag(false);
 			client->setHeaderEnd(RequestParser::npos);
@@ -89,45 +104,22 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 	}
 	endHeader = pos;
 	if (client->getHeaderFlag() == true) {
-		size_t contentLen = client->getContentLength();
-		if (contentLen == 0) { // 아직 안 찾아봄
-			std::string content_header = "Content-Length:";
-			size_t content_len_pos = kmp(buf, content_header, 0);
-			if (content_len_pos == RequestParser::npos) { 
-				// content length 못찾음
-				client->setHeaderFlag(false);
-				client->setHeaderEnd(RequestParser::npos);
-				return (pos);
-			} else { 
-				// content length 찾았음
-				int content_len_tail = content_len_pos; 
-				while (buf[content_len_tail] != '\r') {
-					content_len_tail++;
-				}
-				std::string temp;
-				for (int k = content_len_pos + content_header.size(); k < content_len_tail; k++) {
-					temp += buf[k];
-				}
-				contentLen = std::atoi(temp.c_str());
-				client->setContentLength(contentLen);
-				if (contentLen >= 0 && pos + 4 + contentLen <= buf.size()) {
-					// message done
-					client->setHeaderFlag(false);
-					client->setHeaderEnd(RequestParser::npos);
-					return (pos + contentLen);
-				} else {
-					// need more body
-					return (RequestParser::npos);
-				}
-			}
-		} else if (contentLen == RequestParser::npos) { // 찾아봤는데 없음
+		contentLen = client->getContentLength();
+		if (contentLen == RequestParser::npos) {
 			client->setHeaderFlag(false);
 			client->setHeaderEnd(RequestParser::npos);
 			return (pos);
-		} else { // 찾았음
-			client->setHeaderFlag(false);
-			client->setHeaderEnd(RequestParser::npos);
-			return (pos + contentLen);
+		} else { 
+			// content length 찾았음	
+			if (contentLen >= 0 && pos + 4 + contentLen <= buf.size()) {
+				// message done
+				client->setHeaderFlag(false);
+				client->setHeaderEnd(RequestParser::npos);
+				return (pos + contentLen);
+			} else {
+				// need more body
+				return (RequestParser::npos);
+			}
 		}
 	}
 	// header not done

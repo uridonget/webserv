@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 19:44:38 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 15:51:40 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -189,9 +189,6 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 	}
 	// Message == 1
 	RequestParser parser;
-	// std::cout << "----- buf read value -----" << std::endl;
-	// write(1, buf, n);
-	// std::cout << "----- buf read value end -----" << std::endl;
 	size_t endHeader;
 	Message *message = dynamic_cast<Message *>(bufferList[bufferIdx]);
 	size_t endIndex = parser.checkEnd(message, buf, n, endHeader);

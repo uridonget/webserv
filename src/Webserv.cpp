@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/12 10:47:57 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/12 11:45:32 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,15 +212,12 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 				}
 				changeList.push_back(clientEvent);
 			}
-			std::cout << "Parsing success" << std::endl;
 		} catch (const std::runtime_error &e) {
 			std::cerr << "Parsing error: " << e.what() << std::endl;
 		}
-		// buffer->getReadBuffer().erase(buffer->getReadBuffer().begin(), buffer->getReadBuffer().begin() + endIndex + 3);
 		std::vector<char> temp =  std::vector<char>(buffer->getReadBuffer().begin() + endIndex + 4, buffer->getReadBuffer().end());
 		buffer->getReadBuffer().clear();
 		buffer->getReadBuffer() = temp;
-		std::cout << "buffer size = " << buffer->getReadBuffer().size() << std::endl;
 	}
 }
 
@@ -230,7 +227,8 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 
 	std::vector<char>& writeBuffer = bufferList[bufferIdx]->getWriteBuffer();
 	std::string response(writeBuffer.begin(), writeBuffer.end());
-
+	std::cout << "\n<RESPONSE>\n";
+    std::cout << response << std::endl;
 	int writeSize = BUFFER_SIZE;
 	if (writeBuffer.size() < BUFFER_SIZE) {
 		writeSize = writeBuffer.size();

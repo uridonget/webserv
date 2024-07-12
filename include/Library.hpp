@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:19:03 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/11 19:57:59 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/12 12:42:39 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,7 @@ struct HttpRequest {
     std::string query;
     // std::map<std::string, std::string> query;
     int fd;
+    size_t fileCount;
     std::vector<char> body;
 
     HttpRequest()

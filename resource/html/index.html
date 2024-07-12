@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>파일 업로드</title>
+    <title>Multiple File Upload</title>
 </head>
 <body>
-    <h2>파일 업로드</h2>
+    <h1>여러 파일 업로드</h1>
     <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" id="file">
+        <label for="files">파일 선택:</label>
+        <input type="file" id="files" name="files[]" multiple>
+        <br><br>
         <input type="submit" value="업로드">
     </form>
 </body>

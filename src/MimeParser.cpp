@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/05 20:45:54 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/06 13:44:02 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/11 20:24:07 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 size_t MimeParser::kmp(std::string &target)
 {
-    int size1 = buf.size() - index;
     int size2 = target.size();
     int j = 0;
     std::vector<int> dp;
@@ -33,7 +32,7 @@ size_t MimeParser::kmp(std::string &target)
         }
     }
     j = 0;
-    for (int i = index; i < buf.size(); i++)
+    for (int i = bufIndex; i < buf.size(); i++)
     {
         while (j > 0 && buf[i] != target[j])
         {
@@ -53,19 +52,28 @@ size_t MimeParser::kmp(std::string &target)
 
 void MimeParser::nextChar()
 {
-    if (now != buf.end())
+    if (bufIndex + 1 < buf.size())
     {
-        index++;
-        now++;
+        bufIndex++;
+        currentChar = buf[bufIndex];
     }
-    if (now == buf.end())
+    if (bufIndex == buf.size())
     {
         currentChar = NULL_CHAR;
     }
 }
 
+void MimeParser::consumeOWS()
+{
+    while (currentChar == ' ')
+    {
+        nextChar();
+    }
+}
+
 int MimeParser::consumeCRLF()
 {
+    int lastIndex = bufIndex;
     if (currentChar == CR)
     {
         nextChar();
@@ -76,17 +84,20 @@ int MimeParser::consumeCRLF()
         }
         else
         {
+            bufIndex = lastIndex;
             return (-1);
         }
     }
     else
     {
+        bufIndex = lastIndex;
         return (-1);
     }
 }
 
 int MimeParser::consumeMimeEnd()
 {
+    int lastIndex = bufIndex;
     if (currentChar == '-')
     {
         nextChar();
@@ -97,25 +108,29 @@ int MimeParser::consumeMimeEnd()
         }
         else
         {
+            bufIndex = lastIndex;
             return (-1);
         }
     }
     else
     {
+        bufIndex = lastIndex;
         return (-1);
     }
 }
 
-int MimeParser::consumeBoder()
+int MimeParser::consumeBoundary()
 {
-    for (int i = 0; i < boder.size(); i++)
+    int lastIndex = bufIndex;
+    for (int i = 0; i < boundary.size(); i++)
     {
-        if (currentChar == boder[i])
+        if (currentChar == boundary[i])
         {
             nextChar();
         }
         else
         {
+            bufIndex = lastIndex;
             return (-1);
         }
     }
@@ -127,6 +142,8 @@ void MimeParser::deleteFileAll(std::vector<Buffer *> &request)
     for (int i = 0; i < request.size(); i++)
     {
         File *temp = dynamic_cast<File *>(request[i]);
+        close(temp->getFd());
+        std::remove(temp->getFilename().c_str());
         delete temp;
     }
 }
@@ -134,18 +151,60 @@ void MimeParser::deleteFileAll(std::vector<Buffer *> &request)
 int MimeParser::fieldLine(std::vector<std::pair<std::string, std::string> > &header)
 {
     std::string name = parseFieldName();
-    expect(':');
-    nextChar();
+    if (expect(':') == -1)
+        return -1;
+    consumeOWS();
     std::string value = parseFieldValue();
-    consumeCRLF();
     header.push_back(std::make_pair(name, value));
+    while (true)
+    {
+        consumeOWS();
+        if (expect(';') == -1)
+            break;
+        consumeOWS();
+        if (currentChar == CR || currentChar == LF || currentChar == NULL_CHAR)
+            break;
+        name = "";
+        value = "";
+        while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != '=')
+        {
+            name += currentChar;
+            nextChar();
+        }
+        if (expect('=') != -1)
+        {
+            bool dquote = false;
+            if (currentChar == '\"')
+            {
+                nextChar();
+                dquote = true;
+            }
+            while ((dquote == true && currentChar != NULL_CHAR)
+                || (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != ' ' && currentChar != ';'))
+            {
+                if (dquote == true && currentChar == '\"')
+                {
+                    break;
+                }
+                value += currentChar;
+                nextChar();
+            }
+            if (currentChar == '\"')
+                nextChar();
+            consumeOWS();
+        }
+        header.push_back(std::make_pair(name, value));
+    }
+    consumeOWS();
+    if (consumeCRLF() == -1)
+        return -1;
     return (0);
 }
 
 std::string MimeParser::parseFieldName()
 {
     std::string name;
-    while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != ':')
+    while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != ' ' && currentChar != ':')
     {
         name += currentChar;
         nextChar();
@@ -156,24 +215,48 @@ std::string MimeParser::parseFieldName()
 std::string MimeParser::parseFieldValue()
 {
     std::string name;
-    while (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR)
+    bool dquote = false;
+    if (currentChar == '\"')
     {
+        nextChar();
+        dquote = true;
+    }
+    while ((dquote == true && currentChar != NULL_CHAR)
+        || (currentChar != CR && currentChar != LF && currentChar != NULL_CHAR && currentChar != ' ' && currentChar != ';'))
+    {
+        if (dquote == true && currentChar == '\"')
+        {
+            break;
+        }
         name += currentChar;
         nextChar();
     }
+    if (currentChar == '\"')
+        nextChar();
     return name;
 }
 
-int MimeParser::consumeUntilBoder(std::vector<char> &content)
+int MimeParser::consumeUntilBoundary(bool fileopen)
 {
-    size_t pos = kmp(boder);
+    std::string target = "\r\n" + boundary;
+    size_t pos = kmp(target);
     if (pos == npos)
     {
         return (-1);
     }
-    if (pos > index)
+    if (pos > bufIndex && fileopen == true)
     {
-        content.insert(content.begin(), now, now + pos);
+        std::vector<char> &content = request[request.size() - 1]->getWriteBuffer();
+        content.insert(content.begin(), buf.begin() + bufIndex, buf.begin() + pos);
+        bufIndex = pos - 1;
+        nextChar();
+        consumeCRLF();
+    }
+    else if (pos > bufIndex && fileopen == false)
+    {
+        bufIndex = pos - 1;
+        nextChar();
+        consumeCRLF();
     }
     return (0);
 }
@@ -184,19 +267,31 @@ int MimeParser::expect(char expected)
     {
         return (-1);
     }
+    nextChar();
     return (0);
 }
 
-MimeParser::MimeParser(std::string boder) : boder(boder), index(0) {}
+MimeParser::MimeParser(std::string boundary, std::vector<char> &buf) : boundary("--" + boundary), bufIndex(0), buf(buf)
+{
+    bufIndex = 0;
+    if (bufIndex < buf.size())
+        currentChar = buf[bufIndex];
+    else
+        currentChar = NULL_CHAR;
+}
 
 std::vector<Buffer *> MimeParser::parse(std::string root)
 {
-    bool errorFlag = true;
+    bool errorFlag = false;
+    bool fileopen = false;
     std::vector<std::pair<std::string, std::string> > header;
-    int index = 0;
+    request.clear();
+    if (consumeBoundary() == -1 || consumeCRLF() == -1)
+    {
+        errorFlag = true;
+    }
     while (errorFlag == false)
     {
-        consumeBoder();
         while (currentChar != NULL_CHAR && currentChar != CR)
         {
             if (fieldLine(header) == -1)
@@ -205,13 +300,9 @@ std::vector<Buffer *> MimeParser::parse(std::string root)
                 break;
             }
         }
-        if (errorFlag == true)
-        {
-            break;
-        }
         std::vector<std::pair<std::string, std::string> >::iterator it;
-        std::string contentHeader = "Content-Disposition";
-        for (it = header.begin() ;it != header.end(); it++)
+        std::string contentHeader = "filename";
+        for (it = header.begin(); it != header.end(); it++)
         {
             if (it->first == contentHeader)
             {
@@ -220,18 +311,18 @@ std::vector<Buffer *> MimeParser::parse(std::string root)
         }
         if (it != header.end())
         {
-            size_t pos = it->second.find_last_of("filename=");
-            std::string filename = it->second.substr(pos + 9, std::string::npos);
+            std::string filename = it->second;
             if (filename.size() > 0)
             {
                 std::string path = root;
-                path += "/upload/";
+                path += "/database/";
                 path += filename;
-                int fd = open(path.c_str(), O_RDWR);
+                int fd = open(path.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
                 if (fd > 0)
                 {
-                    File *newfile = new File(fd);
+                    File *newfile = new File(fd, path);
                     request.push_back(static_cast<Buffer *>(newfile));
+                    fileopen = true;
                 }
             }
             else
@@ -245,23 +336,32 @@ std::vector<Buffer *> MimeParser::parse(std::string root)
             errorFlag = true;
             break;
         }
-        consumeCRLF();
-        if (request.size() > index)
+        if (consumeCRLF())
         {
-            consumeUntilBoder(request[request.size()]->getWriteBuffer());
+            errorFlag = true;
+            break;
         }
-        consumeBoder();
-        consumeCRLF();
+        consumeUntilBoundary(fileopen);
+        fileopen = false;
+        if (consumeBoundary() == -1)
+        {
+            errorFlag = true;
+            break;
+        }
+        if (consumeMimeEnd() != -1)
+        {
+            if (consumeCRLF() == -1)
+            {
+                errorFlag = -1;
+            }
+            break;
+        }
+        if (consumeCRLF() == -1)
+        {
+            errorFlag = -1;
+            break;
+        }
         header.clear();
-        index += 1;
-    }
-    if (errorFlag == false && consumeMimeEnd() == -1)
-    {
-        errorFlag = true;
-    }
-    else if (errorFlag == false && expect('\0') == -1)
-    {
-        errorFlag = true;
     }
     if (errorFlag == true)
     {

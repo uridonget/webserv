@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/06 13:06:19 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/06 13:40:51 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/10 18:17:56 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,9 @@ class MimeParser
 {
 private:
     char currentChar;
-    std::vector<char> buf;
-    std::vector<char>::iterator now;
-    int index;
-    std::string boder;
+    std::vector<char> &buf;
+    int bufIndex;
+    std::string boundary;
     std::vector<Buffer *> request;
     static const char NULL_CHAR = '\0';
     static const char CR = '\r';
@@ -33,18 +32,19 @@ private:
 
     size_t kmp(std::string &target);
     void nextChar();
+    void consumeOWS();
     int consumeCRLF();
     int consumeMimeEnd();
-    int consumeBoder();
+    int consumeBoundary();
     void deleteFileAll(std::vector<Buffer *> &request);
     int fieldLine(std::vector<std::pair<std::string, std::string> > &header);
     std::string parseFieldName();
     std::string parseFieldValue();
-    int consumeUntilBoder(std::vector<char> &content);
+    int consumeUntilBoundary(bool fileopen);
     int expect(char expected);
 
 public:
-    MimeParser(std::string boder);
+    MimeParser(std::string boder, std::vector<char> &buf);
     std::vector<Buffer *> parse(std::string root);
 };
 

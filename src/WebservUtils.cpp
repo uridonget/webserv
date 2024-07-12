@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebservUtils.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 16:46:15 by heolee            #+#    #+#             */
-/*   Updated: 2024/07/05 11:15:03 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 16:54:36 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,10 @@ void Webserv::successResponse(int bufferIdx) {
 }
 
 void Webserv::successFileWrite(int bufferIdx) {
+	close(bufferList[bufferIdx]->getFd());
 	struct kevent clientEvent;
 	EV_SET(&clientEvent, bufferList[bufferIdx]->getFd(), EVFILT_WRITE, EV_DELETE , 0, 0, NULL);
 	changeList.push_back(clientEvent);
 	delete bufferList[bufferIdx];
 	bufferList.erase(bufferList.begin() + bufferIdx);
-	close(bufferList[bufferIdx]->getFd());
 }

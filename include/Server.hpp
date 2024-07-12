@@ -3,31 +3,32 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 16:22:49 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/09 19:20:56 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/11 21:25:04 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
 #include "ServerConfig.hpp"
 #include "Webserv.hpp"
 #include "Buffer.hpp"
 #include "File.hpp"
 #include "Message.hpp"
-#include <sys/types.h>
-#include <sys/event.h>
-#include <sys/time.h>
+#include "MimeParser.hpp"
 
 class Server {
 	private:
 		ServerConfig 										config;
 		int													serverFd;
 		struct sockaddr_in 									serverAddr;
-		std::map<Buffer*, std::pair<Buffer*, HttpRequest> >	requestList;
+		std::map<Buffer*, std::pair<Buffer*, HttpRequest*> >	requestList;
 		
 	public:
 		Server();
@@ -43,9 +44,9 @@ class Server {
 
 		int checkValid(HttpRequest & request, std::string & target);
 
-		Buffer *processRequest(Buffer *client, HttpRequest &request, struct kevent &change); 
+		std::vector<Buffer*> processRequest(Buffer *client, HttpRequest &request, std::vector <struct kevent> &changeList);
 
-		void afterProcessRequest(Buffer *file, struct kevent &change); // file을 열 수 있는지 확인하고 존재하면 buffer(파일)을 생성한다.
+		int afterProcessRequest(Buffer *file, struct kevent &change); // file을 열 수 있는지 확인하고 존재하면 buffer(파일)을 생성한다.
 		
 		std::string makeResponseWithNoBody(HttpRequest &request, int code);
 

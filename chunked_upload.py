@@ -17,7 +17,7 @@ def send_chunked_request(file_path, host, port, chunk_size):
         
         # Send the initial headers
         request_headers = (
-            "POST /image/hello.html HTTP/1.1\r\n"
+            "POST resource/image/hello.html HTTP/1.1\r\n"
             "Host: {}:{}\r\n"
             "User-Agent: python-socket\r\n"
             "Accept: */*\r\n"
@@ -50,9 +50,9 @@ def send_chunked_request(file_path, host, port, chunk_size):
         
         sock.close()
 
-file_path = 'image/hello.html'
+file_path = 'resource/image/hello.html'
 host = 'localhost'
 port = 1004
-chunk_size = 10
+chunk_size = 30
 
 send_chunked_request(file_path, host, port, chunk_size)

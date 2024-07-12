@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/11 21:30:47 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/12 10:47:57 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,11 +124,10 @@ void printHttpRequest(const HttpRequest& request) {
         std::cout << "Content-Length: " << request.contentLength << std::endl;
     }
     if (!request.body.empty()) {
-        std::cout << "Body: [";
+        std::cout << "Body:\n";
         for (std::vector<char>::const_iterator it = request.body.begin(); it != request.body.end(); ++it) {
             std::cout << *it;
         }
-        std::cout << "]" << std::endl;
     }
 }
 
@@ -197,7 +196,9 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 		llParser llparser(bufferList[bufferIdx]->getReadBuffer(), endHeader);
 		try{
 			HttpRequest request = llparser.parse(); // 파싱 완료
+			// 여기에서 터짐
 			request.body.insert(request.body.end(), buffer->getReadBuffer().begin() + endHeader + 4, buffer->getReadBuffer().begin() + endIndex + 4);
+			// 여기에서 터짐
 			printHttpRequest(request);
 			std::map<int, Server>::iterator server = serverList.find(serverFd);
 			if (server != serverList.end())
@@ -212,9 +213,7 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 				changeList.push_back(clientEvent);
 			}
 			std::cout << "Parsing success" << std::endl;
-		}
-		catch (const std::runtime_error &e)
-		{
+		} catch (const std::runtime_error &e) {
 			std::cerr << "Parsing error: " << e.what() << std::endl;
 		}
 		// buffer->getReadBuffer().erase(buffer->getReadBuffer().begin(), buffer->getReadBuffer().begin() + endIndex + 3);

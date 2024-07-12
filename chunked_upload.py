@@ -53,6 +53,6 @@ def send_chunked_request(file_path, host, port, chunk_size):
 file_path = 'image/hello.html'
 host = 'localhost'
 port = 1004
-chunk_size = 30
+chunk_size = 10
 
 send_chunked_request(file_path, host, port, chunk_size)

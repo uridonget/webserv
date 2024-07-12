@@ -6,7 +6,7 @@
 /*   By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 21:09:51 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/07/11 22:32:33 by haejeong         ###   ########.fr       */
+/*   Updated: 2024/07/12 10:47:01 by haejeong         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,12 +96,9 @@ bool RequestParser::chunkParsing(std::vector<char> &buf, Message *client, bool &
 	if (stream.get() != '\r' || stream.get() != '\n') {
         return false; // 문자열 후에 \r\n 체크
     }
-	std::cout << "NUM  : " << num << std::endl;
-	std::cout << "READ : [" << data.c_str() << "]" << std::endl;
 	buf.erase(buf.begin() + chunkStart, buf.begin() + chunkStart + hexNum.size() + 4 + num);
 	if (data.size() > 0)
 		buf.insert(buf.begin() + chunkStart, data.begin(), data.end());
-	
 	client->setChunkStart(chunkStart + num);
 	if (num == 0) {
 		endFlag = true;
@@ -160,33 +157,18 @@ size_t RequestParser::checkEnd(Message *client, char *append, size_t size, size_
 					break ;
 				}
 			}
-			if (endFlag == true) {
-				// 그만 읽어
+			if (endFlag == true) { // 그만 읽어
 				client->setHeaderFlag(false);
 				client->setHeaderEnd(RequestParser::npos);
 				client->setContentLength(RequestParser::npos);
 				client->setChunkFlag(false);
-				size_t end = client->getChunkStart();
-				std::cout << "END : " << end << std::endl;
+				size_t end = client->getChunkStart() - 4;
 				client->setChunkStart(0);
-				std::string check(buf.begin(), buf.end());
-				// try{
-				
-				// }
-				// catch (std::exception &e)
-				// {
-				// 	std::cerr 
-				// }
-				std::cout << "<FULL BUFFER>" << std::endl;
-				std::cout << "pos : " << pos << " end : " << end << std::endl;
-				std::cout << check << std::endl;
 				return (end);
-			} else {
-				// 더 읽어
+			} else { // 더 읽어
 				client->setHeaderFlag(true);
 				client->setHeaderEnd(pos);
 				client->setChunkFlag(true);
-				
 				return (RequestParser::npos);
 			}
 		} else if (contentLen == RequestParser::npos) { // content length 없음

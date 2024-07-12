@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+         #
+#    By: haejeong <haejeong@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/04/12 10:20:27 by haejeong          #+#    #+#              #
-#    Updated: 2024/07/09 13:07:01 by sangyhan         ###   ########.fr        #
+#    Updated: 2024/07/12 10:32:20 by haejeong         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME	 = webserv
 
 CXX		 = c++
 
-CXXFLAGS = -g # -Wall -Wextra -Werror -std=c++98
+CXXFLAGS = -fsanitize=address # -Wall -Wextra -Werror -std=c++98
 
 SRCS	 = $(wildcard src/*.cpp)
 

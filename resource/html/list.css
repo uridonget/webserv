@@ -1,0 +1,48 @@
+
+body {
+    margin: 0px;
+    padding: 0px;
+}
+
+h1 {
+    margin: 0px 0px 10px;
+    border-bottom: 2px solid black;
+    padding: 15px 25px;
+    color: white;
+    background-color: black;
+}
+
+ul {
+    list-style: none;
+    padding: 0px;
+}
+
+li {
+    border: 2px solid black;
+    margin: 30px 50px;
+    padding: 30px 40px;
+    font-size: 30px;
+    border-radius: 20px;
+}
+
+.post-button {
+    border: 0px;
+    margin: 0px 50px;
+    color: white;
+    background-color: black;
+    width: 90px;
+    height: 45px;
+    border-radius: 10px;
+    font-size: 22px;
+}
+
+.delete-button {
+    float: right;
+    background-color: black;
+    border: 0px;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 16px;
+}

@@ -58,10 +58,9 @@ class Server {
 		
 		std::string makeErrorPage(int & code, std::string & message);
 		
-		std::string makeBody(HttpRequest & request, int & code, std::string & message);
-		
 		std::string makeHeader(HttpRequest & request, int & code, std::string & message, std::string & body);
 		
+		void handleCGI(int tmpFileFd, std::string & target, HttpRequest &request);
 
 };
 

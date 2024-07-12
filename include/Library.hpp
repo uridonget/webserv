@@ -88,13 +88,17 @@ struct HttpRequest {
 
 void	setNonblock(int fd);
 
-std::vector<std::string> ft_split(std::string str, char c);
+std::vector<std::string> ft_split(std::string & str, char c);
 
 int isDirectory(std::string & path);
 
 bool isHexDigit(char c);
 
 int hexToDecimal(const std::string & hex);
+
+bool endWith(const std::string& str, const std::string& suffix);
+
+bool isCGI(const std::string & str);
 
 class RuntimeException : public std::runtime_error {
 public:

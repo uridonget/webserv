@@ -47,16 +47,14 @@ void Server::initServer(ServerConfig & config) {
 	}
 }
 
-bool Server::findMatchingLocation(std::string & requestURL, Location & location) 
-{
+bool Server::findMatchingLocation(std::string & requestURL, Location & location) {
     std::vector<Location> locationList = config.getLocationList();
-    bool res = false;
     std::vector<std::string> splitUrl = ft_split(requestURL, '/'); // 0
+    int j = splitUrl.size();
     std::vector<std::string> splitPath;
     for (std::vector<Location>::const_iterator it = locationList.begin(); it != locationList.end(); ++it) {
-        const std::string &locPath = it->getPath();
+        std::string locPath = it->getPath();
         splitPath = ft_split(locPath, '/');
-        int j = splitUrl.size();
         int k = splitPath.size();
         if (j == 0 && k == 0) {
             location = *it;
@@ -68,14 +66,22 @@ bool Server::findMatchingLocation(std::string & requestURL, Location & location)
                 break;
             if (i + 1 == j || i + 1 == k) {
                 if (j == k || j == k + 1) {
-                    res = true;
                     location = *it;
+                    return true;
                 }
             }
             i++;
         }
     }
-    return res;
+    std::vector<Location>::const_iterator it = locationList.begin();
+    for (; it != locationList.end(); ++it) {
+        std::string locPath = it->getPath();
+        if (j == 1 && ft_split(locPath, '/').size() == 0) {
+            location = *it;
+            return true;
+        }
+    }
+    return false;
 }
 
 int Server::afterProcessRequest(Buffer *file, struct kevent &change)
@@ -201,7 +207,26 @@ std::vector<Buffer*> Server::processRequest(Buffer *client, HttpRequest &request
     std::vector<Buffer *> resList;
     int code = checkValid(request, target);
     if (code == 200) {
-        if (request.method == GET && access(target.c_str(), F_OK | R_OK) == 0) {
+        if (isCGI(target)) {
+            if (access(target.c_str(), F_OK | R_OK | X_OK) == 0) {
+                int tmpFileFd = open("tmp", O_RDWR | O_CREAT, 0644);
+                if (tmpFileFd > 0)
+                {
+                    handleCGI(tmpFileFd, target, request);
+                    close(tmpFileFd);
+                    tmpFileFd = open("tmp", O_RDONLY);
+                    File *res = new File(tmpFileFd);
+                    resList.push_back(static_cast<Buffer *>(res));
+                    HttpRequest *request_share = new HttpRequest;
+                    *request_share = request;
+                    request_share->fileCount = 1;
+                    requestList[static_cast<Buffer *>(res)] = std::make_pair(client, request_share);
+                    pushEvent(tmpFileFd, EVFILT_READ, EV_ADD | EV_ENABLE, changeList);
+                    return resList;
+                }
+            }
+        }
+        else if (request.method == GET && access(target.c_str(), F_OK | R_OK) == 0) {
             int fileFd = open(target.c_str(), O_RDONLY);
             if (fileFd > 0) // file open ok
             {
@@ -381,80 +406,6 @@ std::string Server::makeErrorPage(int & code, std::string & message) {
     return oss.str();
 }
 
-// std::string readFromPipe(int pipeFd) {
-//     const size_t bufferSize = 1000;
-//     std::vector<char> buffer(bufferSize);
-//     std::string result;
-//     while (true) {
-//         ssize_t bytesRead = read(pipeFd, buffer.data(), bufferSize);
-//         if (bytesRead < 0) {
-//             break;
-//         }
-//         if (bytesRead == 0) {
-//             break;
-//         }
-//         result.append(buffer.data(), bytesRead);
-//     }
-//     result.push_back(0);
-//     return (result);
-// }
-
-// std::string Server::makeBody(HttpRequest & request, int & code, std::string & message) {
-//     if (code != 200) {
-//         return (makeErrorPage(code, message));
-//     }
-//     // 여기에서 이미지를 요청하면 이미지를 보낼 수 있도록 body를 만들기
-//     std::string body;
-//     int pipefd[2];
-//     int pipeOut[2];
-//     if (pipe(pipefd) < 0) {
-//         throw RuntimeException("pipe");
-//     }
-//     if (pipe(pipeOut) < 0) {
-//         throw RuntimeException("pipe");
-//     }
-//     pid_t pid = fork();
-//     if (pid < 0) {
-//         throw RuntimeException("fork");
-//     }
-//     if (pid == 0) { // 자식 프로세스
-//         if (dup2(pipefd[0], STDIN_FILENO) < 0) {
-//             throw RuntimeException("dup2");
-//         }
-//         if (dup2(pipeOut[1], STDOUT_FILENO) == -1) {
-//             throw RuntimeException("dup2");
-//         }
-//         close(pipefd[0]);
-//         close(pipefd[1]);
-//         close(pipeOut[0]);
-//         close(pipeOut[1]);
-//         std::string fileName = "cgi-bin/hello.py";
-//         std::vector<char *> exec_args;
-//         exec_args.push_back(const_cast<char *>(fileName.c_str()));
-//         exec_args.push_back(NULL);
-//         char *envp[1];
-//         envp[0] = 0;
-//         execve(fileName.c_str(), exec_args.data(), envp);
-//         perror("execve");
-//         throw RuntimeException("execve");
-//     } else {
-//         int status;
-//         std::vector<char> buffer(BUFFER_SIZE);
-//         std::string result;
-//         close(pipefd[0]);
-//         close(pipefd[1]);
-//         close(pipeOut[1]);
-//         waitpid(pid, &status, 0);
-//         if (WIFEXITED(status)) {
-//             std::string result = readFromPipe(pipeOut[0]);
-//             for (int i=0; i < result.size(); i++) {
-//                 body.push_back(result[i]);
-//             }
-//         }
-//         return (body);
-//     }
-// }
-
 std::string Server::makeHeader(HttpRequest & request, int & code, std::string & message, std::string & body) {
     std::ostringstream oss;
     std::string contentType;
@@ -471,4 +422,76 @@ std::string Server::makeHeader(HttpRequest & request, int & code, std::string & 
     }
     oss << "\r\n";
     return oss.str();
+}
+
+void Server::handleCGI(int tmpFileFd, std::string & target, HttpRequest &request) {
+    char *const envp[] = {
+        (char *)"AUTH_TYPE=",                   // 서블릿을 보호하는 데 사용되는 인증 스키마의 이름입니다. 예를 들면 BASIC, SSL 또는 서블릿이 보호되지 않는 경우 null입니다.
+        (char *)"CONTENT_LENGTH=0",             // 입력 스트림에서 사용 가능한 요청 본문의 길이(바이트) 또는 길이를 알 수 없는 경우 -1입니다. HTTP 서블릿의 경우 리턴되는 값은 CGI 변수 CONTENT_LENGTH의 값과 동일합니다.
+        (char *)"CONTENT_TYPE=text/html",       // 요청 본문의 MIME 유형 또는 유형을 모르는 경우 null입니다. HTTP 서블릿의 경우 리턴되는 값은 CGI 변수 CONTENT_TYPE의 값과 동일합니다
+        (char *)"GATEWAY_INTERFACE=CGI/1.1",    // 서버가 스크립트와 통신하기 위해 사용하는 CGI 스펙의 버전입니다.
+        (char *)"HTTP_ACCEPT=",                 // "HTTP_"로 시작하는 이름을 가진 변수는 사용되는 스키마가 HTTP인 경우 요청 헤더의 값을 포함합니다. HTTP_ACCEPT는 브라우저가 지원하는 내용 유형을 지정합니다. 예를 들어, text/xml입니다.
+        (char *)"HTTP_ACCEPT_CHARSET=",         // 문자 환경 설정 정보. 정보가 있는 경우 클라이언트의 선호하는 문자 세트를 표시하는 데 사용됩니다. 예를 들어, utf-8;q=0.5입니다.
+        (char *)"HTTP_ACCEPT_ENCODINGE=",       // 클라이언트로 리턴되는 내용에 대해 수행될 수 있는 인코딩의 유형을 정의합니다. 예를 들어, compress;q=0.5입니다.
+        (char *)"HTTP_ACCEPT_LANGUAGE=",        // 수신할 내용에 적합한 언어를 정의하는 데 사용됩니다. 예를 들어, en;q=0.5입니다. 리턴되는 결과가 없으면 언어 환경 설정이 표시되지 않습니다.
+        (char *)"HTTP_FORWARDED=",              // 요청이 전달되는 경우 프록시 서버의 주소 및 포트를 표시합니다.
+        (char *)"HTTP_HOST=",                   // 요청되는 자원의 인터넷 호스트 및 포트 번호를 지정합니다. 모든 HTTP/1.1 요청의 경우 필수입니다.
+        (char *)"HTTP_PROXY_AUTHORIZATION=",    // 인증이 필요한 프록시에 클라이언트 자체 또는 클라이언트의 사용자를 식별하기 위해 클라이언트가 사용합니다.
+        (char *)"HTTP_USER_AGENT=",             // 클라이언트가 요청을 보내기 위해 사용 중인 브라우저의 유형 및 버전입니다. 예를 들어, Mozilla/1.5입니다.
+        (char *)"PATH_INFO=/hello.html",        // 선택적으로 스크립트를 호출한 HTTP 요청의 추가 경로 정보를 포함하고 있으며 CGI 스크립트로 해석할 경로를 지정합니다. PATH_INFO는 CGI 스크립트가 리턴할 자원 또는 하위 자원을 식별하며 스크립트 이름 뒤에 오지만 모든 조회 데이터 앞에 오는 URI 경로 부분에서 파생됩니다.
+        (char *)"PATH_TRANSLATED=",             // 스크립트의 가상 경로를 스크립트를 호출하는 데 사용되는 실제 경로에 맵핑합니다. 맵핑은 요청 URI의 PATH_INFO 구성요소를 가져와 적합한 가상 대 실제 변환을 수행하여 실행됩니다.
+        (char *)"QUERY_STRING=",                // 경로 뒤의 요청 URL에 포함된 조회 문자열입니다.
+        (char *)"REMOTE_ADDR=",                 // 요청을 보낸 클라이언트의 IP 주소를 리턴합니다. HTTP 서블릿의 경우 리턴되는 값은 CGI 변수 REMOTE_ADDR의 값과 동일합니다.
+        (char *)"REMOTE_HOST=",                 // 요청을 보낸 클라이언트의 완전한 이름이거나 이름을 판별할 수 없는 경우 클라이언트의 IP 주소입니다. HTTP 서블릿의 경우 리턴되는 값은 CGI 변수 REMOTE_HOST의 값과 동일합니다.
+        (char *)"REMOTE_USER=",                 // 사용자가 인증된 경우 이 요청을 작성한 사용자의 로그인을 리턴하고 사용자가 인증되지 않은 경우 널(null)을 리턴합니다.
+        (char *)"REQUEST_METHOD=GET",           // 이 요청을 작성할 때 사용된 HTTP 메소드의 이름을 리턴합니다. 예를 들어, GET, POST 또는 PUT입니다.
+        (char *)"SCRIPT_NAME=",                 // 프로토콜 이름에서 HTTP 요청의 첫 번째 라인에 있는 조회 문자열까지, URL의 부분을 리턴합니다.
+        (char *)"SERVER_NAME=localhost",        // 요청을 수신한 서버의 호스트 이름을 리턴합니다. HTTP 서블릿의 경우 CGI 변수 SERVER_NAME의 값과 동일합니다.
+        (char *)"SERVER_PORT=80",               // 이 요청이 수신된 포트 번호를 리턴합니다. HTTP 서블릿의 경우 리턴되는 값은 CGI 변수 SERVER_PORT의 값과 동일합니다.
+        (char *)"SERVER_PROTOCOL=HTTP/1.1",     // 요청이 사용하는 프로토콜의 이름과 버전을 protocol/majorVersion.minorVersion 양식으로 리턴합니다. 예를 들어, HTTP/1.1입니다. HTTP 서블릿의 경우 리턴되는 값은 CGI 변수 SERVER_PROTOCOL의 값과 동일합니다.
+        (char *)"SERVER_SOFTWARE=versbew",      // 서블릿이 실행 중인 서블릿 컨테이너의 이름과 버전을 리턴합니다.
+        (char *)"HTTP_COOKIE=",                 // HTTP 쿠키 문자열
+        (char *)"WEBTOP_USER=",                 // 로그인한 사용자의 사용자 이름
+        (char *)"NCHOME=",                      // NCHOME 환경 변수
+        NULL
+    };
+
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        throw RuntimeException("pipe");
+    }
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        throw RuntimeException("fork");
+    }
+
+    if (pid == 0) {
+
+        if (dup2(pipefd[0], STDIN_FILENO) == -1) {
+            throw RuntimeException("dup2");
+        }
+        if (dup2(tmpFileFd, STDOUT_FILENO) == -1) {
+            throw RuntimeException("dup2");
+        }
+        close(pipefd[0]);
+        close(pipefd[1]);
+
+        std::vector<char *> exec_args;
+        exec_args.push_back(const_cast<char *>(target.c_str()));
+        exec_args.push_back(NULL);
+        execve(target.c_str(), exec_args.data(), envp);
+        throw RuntimeException("execve");
+
+    } else { // 부모 프로세스
+        write(pipefd[1], request.query.c_str(), request.query.length());
+        close(pipefd[0]);
+        close(pipefd[1]);
+
+        int status;
+        waitpid(pid, &status, 0);
+        if (!WIFEXITED(status)) {
+            throw RuntimeException("chid process err");
+        }
+    }
 }

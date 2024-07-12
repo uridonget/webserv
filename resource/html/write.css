@@ -1,0 +1,54 @@
+body {
+    margin: 0px;
+    padding: 0px;
+}
+
+h1 {
+    margin: 0px 0px 10px;
+    border-bottom: 2px solid black;
+    padding: 15px 25px;
+    color: white;
+    background-color: black;
+}
+
+.post-container {
+    border: 3px solid black;
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px;
+    padding: 20px;
+    width: 700px;
+    height: 500px;
+    margin: auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* 그림자 설정 */
+}
+
+.title {
+    font-size: 25px;
+    text-align: center;
+    padding: 10px;
+    border: 2px solid black;
+}
+
+.content {
+    margin-top: 20px;
+    font-size: 20px;
+    padding: 10px;
+    height: 350px;
+    border: 2px solid black;
+}
+
+.button-container {
+    margin-top: 17px;
+}
+
+button {
+    border: 0px;
+    border-radius: 10px;
+    background-color: black;
+    color: white;
+    font-size: 22px;
+    width: 70px;
+    height: 35px;
+    margin-left: 10px;
+}

@@ -27,7 +27,7 @@ std::string readFile(const char* filename) {
 	return content;
 }
 
-std::vector<std::string> ft_split(std::string str, char c) {
+std::vector<std::string> ft_split(std::string & str, char c) {
     std::vector<std::string> words;
     std::stringstream sstream(str);
     std::string word;
@@ -71,4 +71,22 @@ int hexToDecimal(const std::string & hex) {
     ss << std::hex << hex;
     ss >> decimal;
     return decimal;
+}
+
+bool endWith(const std::string& str, const std::string& suffix) {
+	if (str.length() < suffix.length()) {
+		return false;
+	}
+	return (str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0);
+}
+
+bool isCGI(const std::string& str) {
+	std::string suffix1 = ".py";
+	std::string suffix2 = ".php";
+	std::string suffix3 = "cgi_tester";
+
+	if (endWith(str, suffix1) || endWith(str, suffix2) || endWith(str, suffix3)) {
+		return true;
+	}
+	return false;
 }

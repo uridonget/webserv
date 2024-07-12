@@ -171,12 +171,13 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 			std::map<int, Server>::iterator server = serverList.find(serverFd);
 			if (server != serverList.end())
 			{
-       			struct kevent client_event;
-				server->second.afterProcessRequest(bufferList[bufferIdx], client_event);
+       			struct kevent clientEvent;
+				server->second.afterProcessRequest(bufferList[bufferIdx], clientEvent);
 				serverFdMap.erase(bufferList[bufferIdx]->getFd());
 				delete dynamic_cast<File *>(bufferList[bufferIdx]);
 				bufferList.erase(bufferList.begin() + bufferIdx);
-				changeList.push_back(client_event);
+				std::remove("tmp");
+				changeList.push_back(clientEvent);
 			}
 		}
 		return ;

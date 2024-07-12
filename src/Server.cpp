@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 14:42:02 by haejeong          #+#    #+#             */
-/*   Updated: 2024/07/11 20:14:44 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/07/12 12:06:52 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,7 @@ bool Server::findMatchingLocation(std::string & requestURL, Location & location)
 
 int Server::afterProcessRequest(Buffer *file, struct kevent &change)
 {  
-    std::cout << "file end!" << std::endl;
+    // std::cout << "file end!" << std::endl;
     std::map<Buffer *, std::pair<Buffer *, HttpRequest*> >::iterator it = requestList.find(file);
     if (it != requestList.end()) {
         if (it->second.second->fileCount == 1)
@@ -100,7 +100,7 @@ int Server::afterProcessRequest(Buffer *file, struct kevent &change)
         }
         else
         {
-            std::cout << "file count" << it->second.second->fileCount << std::endl;
+            // std::cout << "file count" << it->second.second->fileCount << std::endl;
             it->second.second->fileCount -= 1;
             requestList.erase(file);
         }

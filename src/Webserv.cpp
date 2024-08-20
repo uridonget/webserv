@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/08/20 12:22:57 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/08/20 13:09:14 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -411,6 +411,11 @@ void Webserv::runServers() {
 			}
 			size_t j = 0;
 			for (; j < bufferList.size(); j++) {
+				if (bufferList[j]->whoAmI() == 3) {
+					if (static_cast<Pipe*>(bufferList[j])->getInputFd() == static_cast<int>(eventList[i].ident)) {
+						break;
+					}
+				}
 				if (bufferList[j]->getFd() == static_cast<int>(eventList[i].ident)) {
 					break;
 				}

@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+print('Status: 200 OK\r')
+print('Content-Type: text/html; charset=utf-8\r\n\r')
+
+print('<!DOCTYPE html>')
+print('<html lang="en">')
+print('<head>')
+print('    <meta charset="UTF-8">')
+print('    <meta name="viewport" content="width=device-width, initial-scale=1.0">')
+print('    <title>Webserv 42 Seoul</title>')
+print('    <link rel="stylesheet" href="../html/write.css">')
+print('</head>')
+print('<body>')
+print('    <h1>Welcome to My Webserv</h1>')
+print('    <form class="post-container" method="POST" action="/cgi-bin/create.py">')
+print('        <input name="title" placeholder="글제목" class="title" required></input>')
+print('        <input name="content" placeholder="글내용" class="content" required></input>')
+print('        <div class="button-container">')
+print('            <button type="submit">post</button>')
+print('        </div>')
+print('    <form>')
+print('</body>')
+print('</html>')

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv 42 Seoul</title>
+    <link rel="stylesheet" href="./write.css">
+</head>
+<body>
+    <h1>Welcome to My Webserv</h1>
+    <form class="post-container" method="POST" action="/cgi-bin/create.py">
+        <input name="title" placeholder="글제목" class="title" required></input>
+        <input name="content" placeholder="글내용" class="content" required></input>
+        <div class="button-container">
+            <button type="submit">post</button>
+        </div>
+    <form>
+</body>
+</html>

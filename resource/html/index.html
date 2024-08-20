@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple File Upload</title>
+</head>
+<body>
+    <h1>여러 파일 업로드</h1>
+    <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
+        <label for="files">파일 선택:</label>
+        <input type="file" id="files" name="files[]" multiple>
+        <br><br>
+        <input type="submit" value="업로드">
+    </form>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var formData = new FormData(this);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/', true);
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    alert('업로드 성공: ' + xhr.status);
+                } else {
+                    alert('업로드 실패: ' + xhr.status);
+                }
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>

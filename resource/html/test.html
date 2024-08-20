@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv 42 Seoul - Multiple File Upload</title>
+    <link rel="stylesheet" href="./write.css">
+    <script>
+        function combineFields() {
+            var title = document.querySelector('input[name="title"]').value;
+            var content = document.querySelector('input[name="content"]').value;
+            var combined = "Title: " + title + "\nContent: " + content;
+            document.querySelector('textarea[name="combined_content"]').value = combined;
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            combineFields();
+
+            var formData = new FormData(this);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', this.action, true);
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    alert('업로드 성공: ' + xhr.status);
+                } else {
+                    alert('업로드 실패: ' + xhr.status);
+                }
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</head>
+<body>
+    <h1>Welcome to My Webserv - 여러 파일 업로드</h1>
+    <form id="uploadForm" class="post-container" action="/cgi-bin/upload.py" method="post" enctype="multipart/form-data">
+        <input name="title" placeholder="글제목" class="title" required></input>
+        <input name="content" placeholder="글내용" class="content" required></input>
+        <textarea name="combined_content" style="display:none;"></textarea>
+        <label for="files">파일 선택:</label>
+        <input type="file" id="files" name="files[]" multiple>
+        <div class="button-container">
+            <button type="submit">post</button>
+        </div>
+    </form>
+</body>
+</html>

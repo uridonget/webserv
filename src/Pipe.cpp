@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 17:58:05 by sangyhan          #+#    #+#             */
-/*   Updated: 2024/08/20 13:13:24 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/08/20 15:33:27 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,10 @@ Pipe::Pipe(int inputFd, int outputFd) : Buffer(outputFd) {
     error = false;
     procEnd = false;
     readEnd = false;
+    outClosed = false;
+    inClosed = false;
+    std::cout << "----[OPEN]----\n";
+    std::cout << inputFd << ' ' << outputFd << std::endl;
 }
 
 Pipe::~Pipe() {
@@ -80,10 +84,6 @@ int Pipe::autoWrite(size_t size)
 	}
 	cBuffer[size + 1] = '\0';
 	int writtenSize = write(inputFd, cBuffer, size);
-    if (writtenSize == static_cast<int>(writeBuffer.size()))
-    {
-        close(inputFd);
-    }
 	if (writtenSize > 0)
 	{
 		index += writtenSize;
@@ -109,4 +109,24 @@ const pid_t &Pipe::getPid()
 void Pipe::setPid(pid_t pid)
 {
     this->pid = pid;
+}
+
+void Pipe::closeInput()
+{
+    if (inClosed == false)
+    {
+        close(inputFd);
+        std::cout << "close " << inputFd << std::endl;
+        inClosed = true;
+    }
+}
+
+void Pipe::closeOutput()
+{
+    if (outClosed == false)
+    {
+        close(fd);
+        std::cout << "close " << fd << std::endl;
+        outClosed = true;
+    }
 }

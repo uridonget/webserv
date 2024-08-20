@@ -6,7 +6,7 @@
 /*   By: sangyhan <sangyhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:01:20 by haejeong          #+#    #+#             */
-/*   Updated: 2024/08/20 13:09:14 by sangyhan         ###   ########.fr       */
+/*   Updated: 2024/08/20 15:39:37 by sangyhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,9 +135,10 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 		}
 		else
 		{
-			closeFile(bufferIdx);
 			Pipe *pipe = (static_cast<Pipe *>(bufferList[bufferIdx]));
-			close(pipe->getInputFd());
+			std::cout << "read error inputFd " << pipe->getInputFd() << std::endl;
+			pipe->closeInput();
+			pipe->closeOutput();
 			pipe->setError(true);
 			pipe->setReadEnd(true);
 			if (pipe->End() == true)
@@ -180,9 +181,10 @@ void Webserv::readEvent(int idx, int bufferIdx, int serverFd) {
 		bufferList[bufferIdx]->getReadBuffer().insert(bufferList[bufferIdx]->getReadBuffer().end(), buf, buf + n);
 		if (n == 0)
 		{
-			closeFile(bufferIdx);
+			
 			Pipe *pipe = (static_cast<Pipe *>(bufferList[bufferIdx]));
 			pipe->setReadEnd(true);
+			pipe->closeOutput();
 			if (pipe->End() == true)
 			{
 				std::map<int, Server>::iterator server = serverList.find(serverFd);
@@ -275,9 +277,9 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 		}
 		else
 		{
-			closeFile(bufferIdx);
 			Pipe *pipe = (static_cast<Pipe *>(bufferList[bufferIdx]));
-			close(pipe->getInputFd());
+			std::cout << "write event inputfd " << pipe->getInputFd() << std::endl;
+			pipe->closeInput();
 			pipe->setError(true);
 			pipe->setReadEnd(true);
 			if (pipe->End() == true)
@@ -325,7 +327,8 @@ void Webserv::writeEvent(int idx, int bufferIdx, int serverFd) {
 	if (isMessage(bufferIdx) == 3) { // 파일 전송 성공
 		bufferList[bufferIdx]->getWriteBuffer().clear();
 		Pipe *pipe = (static_cast<Pipe *>(bufferList[bufferIdx]));
-		close(pipe->getInputFd());
+		std::cout << "write sucess inputfd "  << pipe->getInputFd() << std::endl;
+		pipe->closeInput();
 		return ;
 	}
 }
@@ -387,7 +390,9 @@ void Webserv::runServers() {
 						int serverFd = serverFdMap.find(pipe->getFd())->second;
 						if (pipe->End() == true || WIFSIGNALED(status))
 						{
-							close(pipe->getFd());
+							std::cout << "proc end out fd close " << pipe->getFd() << std::endl;
+							pipe->closeOutput();
+							pipe->closeInput();
 							std::map<int, Server>::iterator server = serverList.find(serverFd);
 							if (server != serverList.end())
 							{

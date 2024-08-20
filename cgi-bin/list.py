@@ -14,6 +14,7 @@ post_files = [file for file in file_list if file.startswith('post')]
 try:
     for file_name in post_files:
         f = open(folder_path + file_name, 'r')
+        f.close()
 except:
     print('Status: 403 Forbidden\r')
     print('Content-Type: text/html; charset=utf-8\r\n\r')
@@ -38,10 +39,9 @@ if len(post_files) == 0 :
     print('<div class="no-post">No post!</div>')
 else:
     for file_name in post_files:
-        f = open(folder_path + file_name, 'r')
-        line = f.readline().split('&')
-        print('        <a href="/cgi-bin/posting.py?id={}">{}</a>'.format(file_name[4:], urllib.unquote(line[0][6:]).replace('+',' ')))
-
+        with open(folder_path + file_name, 'r') as f:
+            line = f.readline().split('&')
+            print('        <a href="/cgi-bin/posting.py?id={}">{}</a>'.format(file_name[4:], urllib.unquote(line[0][6:]).replace('+',' ')))
 print('    </ul>')
 print('        <a href="/cgi-bin/write.py" class="post-button">post</a>')
 print('    <img src="/image/pepe3.jpeg" alt="Example Image" style="width:300px;">')

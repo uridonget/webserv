@@ -4,7 +4,7 @@ This is when you finally understand why a URL starts with HTTP
 
 <img width="705" alt="Screen Shot 2024-08-24 at 4 05 18 PM" src="https://github.com/user-attachments/assets/21cdce26-7f6e-40a7-b2f6-9aaceb9f751f">
 
-c++로 nginx를 구현 해보는 42과제입니다
+C++로 nginx를 구현 해보는 42과제입니다
 
 
 
@@ -14,6 +14,12 @@ c++로 nginx를 구현 해보는 42과제입니다
 + kqueue 함수 사용
 + GET, POST, DELETE 기능 제공
 
+## 실행하기
+```text
+make
+pwd | pbcopy # config 파일에 적용
+./webserv ./configs/default.conf
+```
 
-# 사용언어
+## 사용언어
  C++, Python, html, css, javascript

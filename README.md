@@ -23,3 +23,6 @@ pwd | pbcopy # config 파일에 적용
 
 ## 사용언어
  C++, Python, html, css, javascript
+
+## Flow Chart
+ ![flowchart drawio](https://github.com/user-attachments/assets/82f262ca-0f89-4775-a9b8-20cfd4fd6b9c)
